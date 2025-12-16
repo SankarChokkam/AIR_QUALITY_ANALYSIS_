@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 # --------------------------------------------------
 # BASE DIRECTORY
 # --------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --------------------------------------------------
 # CITY COORDINATES
