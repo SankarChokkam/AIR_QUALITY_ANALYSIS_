@@ -41,7 +41,7 @@ st.set_page_config(
 # SIDEBAR
 # --------------------------------------------------
 st.sidebar.title("⚙ Controls")
-st.sidebar.markdown("Interactive air quality analysis")
+st.sidebar.markdown("Interactive air quality analysis dashboard")
 
 # --------------------------------------------------
 # TITLE
@@ -107,8 +107,8 @@ df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 # --------------------------------------------------
 # TABS
 # --------------------------------------------------
-tab1, tab2, tab3 = st.tabs(
-    ["🔮 PM2.5 Prediction", "📊 EDA & Visualisation", "🗺 Air Quality Map"]
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["🔮 PM2.5 Prediction", "📊 EDA & Visualisation", "🗺 India AQ Map", "🏙 City AQ Map"]
 )
 
 # ==================================================
@@ -133,7 +133,7 @@ with tab1:
         X = np.array([[so2, no2, co, o3, pm10, nh3]])
         pred = model.predict(X)[0]
 
-        st.success(f"Predicted PM2.5: *{pred:.2f} µg/m³*")
+        st.success(f"Predicted PM2.5: {pred:.2f} µg/m³")
         st.progress(int(min(pred, 300) / 300 * 100))
 
 # ==================================================
@@ -149,47 +149,18 @@ with tab2:
 
     filtered_df = df if selected_city == "All" else df[df["City"] == selected_city]
 
-    with st.expander("📄 Sample Records", expanded=True):
-        st.dataframe(filtered_df.head())
+    st.dataframe(filtered_df.head())
 
-    with st.expander("📊 AQI Category Distribution"):
-        st.bar_chart(filtered_df["AQI Category"].value_counts())
+    st.bar_chart(filtered_df["AQI Category"].value_counts())
 
-    with st.expander("📈 PM2.5 Distribution"):
-        fig, ax = plt.subplots()
-        ax.hist(filtered_df["PM2.5"], bins=30)
-        ax.set_xlabel("PM2.5")
-        ax.set_ylabel("Frequency")
-        st.pyplot(fig)
-
-    with st.expander("📊 AQI Category Percentage"):
-        aqi_pct = filtered_df["AQI Category"].value_counts(normalize=True) * 100
-        fig, ax = plt.subplots()
-        ax.bar(aqi_pct.index, aqi_pct.values)
-        ax.set_ylabel("Percentage (%)")
-        ax.set_title("AQI Category Distribution (%)")
-        st.pyplot(fig)
-
-    with st.expander("📉 PM2.5 vs PM10 Relationship"):
-        fig, ax = plt.subplots()
-        ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], alpha=0.5)
-        ax.set_xlabel("PM10")
-        ax.set_ylabel("PM2.5")
-        st.pyplot(fig)
-
-    with st.expander("🧪 Average Pollutant Levels"):
-        pollutants = ["PM10", "SO2", "NO2", "CO", "O3", "NH3"]
-        avg_vals = filtered_df[pollutants].mean()
-        fig, ax = plt.subplots()
-        ax.bar(pollutants, avg_vals)
-        ax.set_ylabel("Average Concentration")
-        st.pyplot(fig)
-
-    with st.expander("📑 Dataset Statistics"):
-        st.dataframe(filtered_df.describe())
+    fig, ax = plt.subplots()
+    ax.hist(filtered_df["PM2.5"], bins=30)
+    ax.set_xlabel("PM2.5")
+    ax.set_ylabel("Frequency")
+    st.pyplot(fig)
 
 # ==================================================
-# TAB 3 – MAP
+# TAB 3 – INDIA MAP
 # ==================================================
 with tab3:
     st.subheader("India Air Quality Map (Average PM2.5)")
@@ -213,9 +184,49 @@ with tab3:
 
     st_folium(m, width=1000, height=500)
 
+# ==================================================
+# TAB 4 – CITY-WISE MAP (FILTERED)
+# ==================================================
+with tab4:
+    st.subheader("City-Specific Air Quality Map")
+
+    city_selected = st.selectbox(
+        "Select City",
+        sorted(df["City"].unique().tolist())
+    )
+
+    city_df = df[df["City"] == city_selected]
+    avg_pm = city_df["PM2.5"].mean()
+    category = aqi_category(avg_pm)
+
+    st.markdown(
+        f"""
+        **City:** {city_selected}  
+        **Average PM2.5:** {avg_pm:.2f} µg/m³  
+        **AQI Category:** {category}
+        """
+    )
+
+    lat, lon = CITY_COORDS.get(city_selected, [22.5, 80.0])
+
+    city_map = folium.Map(location=[lat, lon], zoom_start=11)
+
+    color = "green" if avg_pm <= 30 else "orange" if avg_pm <= 60 else "red"
+
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=15,
+        tooltip=f"{city_selected} | Avg PM2.5: {avg_pm:.2f}",
+        color=color,
+        fill=True,
+        fill_opacity=0.85
+    ).add_to(city_map)
+
+    st_folium(city_map, width=900, height=500)
+
 # --------------------------------------------------
 # FOOTER
 # --------------------------------------------------
 st.markdown("---")
-st.markdown("📘 *Course:* CMP7005 – Air Quality Analysis")
-st.markdown("☁ *Deployed on Streamlit Cloud*")
+st.markdown("📘 Course: CMP7005 – Air Quality Analysis")
+st.markdown("☁ Deployed on Streamlit Cloud")
