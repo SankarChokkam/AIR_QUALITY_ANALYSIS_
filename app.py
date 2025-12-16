@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CUSTOM CSS (CLEAN, HUMAN-DESIGNED UI)
+# CUSTOM CSS (CLEAN DARK UI)
 # --------------------------------------------------
 st.markdown("""
 <style>
@@ -27,7 +27,6 @@ html, body {
     background-color: #0b1220;
 }
 
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background-color: #020617;
 }
@@ -46,7 +45,6 @@ section[data-testid="stSidebar"] {
     font-size: 2.6rem;
     font-weight: 700;
     color: #f9fafb;
-    margin-bottom: 0.6rem;
 }
 
 .hero p {
@@ -61,37 +59,22 @@ section[data-testid="stSidebar"] {
     padding: 1.8rem;
     height: 100%;
     box-shadow: 0 12px 25px rgba(0,0,0,0.35);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 18px 40px rgba(0,0,0,0.5);
 }
 
 .card h3 {
     color: #f9fafb;
-    margin-bottom: 0.6rem;
 }
 
 .card p {
     color: #9ca3af;
     font-size: 0.95rem;
-    line-height: 1.5;
 }
 
-/* CTA + Footer */
-.cta {
-    text-align: center;
-    color: #9ca3af;
-    margin-top: 2.5rem;
-    font-size: 0.95rem;
-}
-
+/* Footer */
 .footer {
     text-align: center;
     color: #6b7280;
-    margin-top: 4rem;
+    margin-top: 3rem;
     font-size: 0.85rem;
 }
 </style>
@@ -166,12 +149,18 @@ model = load_model()
 # AQI FUNCTION
 # --------------------------------------------------
 def aqi_category(pm):
-    if pm <= 30: return "Good"
-    elif pm <= 60: return "Satisfactory"
-    elif pm <= 90: return "Moderate"
-    elif pm <= 120: return "Poor"
-    elif pm <= 250: return "Very Poor"
-    else: return "Severe"
+    if pm <= 30:
+        return "Good"
+    elif pm <= 60:
+        return "Satisfactory"
+    elif pm <= 90:
+        return "Moderate"
+    elif pm <= 120:
+        return "Poor"
+    elif pm <= 250:
+        return "Very Poor"
+    else:
+        return "Severe"
 
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 
@@ -179,7 +168,6 @@ df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 # HOME PAGE
 # ==================================================
 if page == "🏠 Home":
-
     st.markdown("""
     <div class="hero">
         <h1>Air Quality Analysis Dashboard</h1>
@@ -193,46 +181,27 @@ if page == "🏠 Home":
         st.markdown("""
         <div class="card">
             <h3>🔮 PM2.5 Prediction</h3>
-            <p>
-            Use a machine learning model to estimate PM2.5 concentration 
-            based on key atmospheric pollutants.
-            </p>
+            <p>Predict PM2.5 concentration using a trained machine learning model.</p>
         </div>
         """, unsafe_allow_html=True)
 
     with c2:
         st.markdown("""
         <div class="card">
-            <h3>📊 Data Insights</h3>
-            <p>
-            Perform interactive exploratory analysis with city filters, 
-            AQI categories, and pollution ranges.
-            </p>
+            <h3>📊 Exploratory Analysis</h3>
+            <p>Filter and analyze air quality data across cities and AQI categories.</p>
         </div>
         """, unsafe_allow_html=True)
 
     with c3:
         st.markdown("""
         <div class="card">
-            <h3>🗺 Geospatial Analysis</h3>
-            <p>
-            Explore India-wide and city-specific air quality maps to 
-            understand spatial pollution patterns.
-            </p>
+            <h3>🗺 Geospatial Insights</h3>
+            <p>Visualize air quality spatially using India-level and city-level maps.</p>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="cta">
-        👉 Use the sidebar on the left to start exploring the dashboard modules.
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="footer">
-        CMP7005 · Air Quality Analysis · Streamlit Cloud Deployment
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="footer">CMP7005 · Streamlit Cloud Deployment</div>', unsafe_allow_html=True)
 
 # ==================================================
 # PREDICTION PAGE
@@ -255,23 +224,62 @@ elif page == "🔮 PM2.5 Prediction":
         st.success(f"Predicted PM2.5: {pred:.2f} µg/m³")
 
 # ==================================================
-# EDA PAGE
+# EDA PAGE (FULLY RESTORED)
 # ==================================================
 elif page == "📊 EDA & Visualisation":
-    st.subheader("Exploratory Data Analysis")
+    st.subheader("Exploratory Data Analysis (Filter-Driven)")
 
-    city = st.selectbox("City", ["All"] + sorted(df["City"].unique()))
-    data = df if city == "All" else df[df["City"] == city]
+    f1, f2, f3 = st.columns(3)
 
-    st.dataframe(data.head(20))
-    st.bar_chart(data["AQI Category"].value_counts())
+    with f1:
+        city_filter = st.selectbox("City", ["All"] + sorted(df["City"].unique()))
 
+    with f2:
+        pm25_range = st.slider(
+            "PM2.5 Range",
+            float(df["PM2.5"].min()),
+            float(df["PM2.5"].max()),
+            (float(df["PM2.5"].min()), float(df["PM2.5"].max()))
+        )
+
+    with f3:
+        aqi_filter = st.multiselect(
+            "AQI Category",
+            df["AQI Category"].unique(),
+            default=df["AQI Category"].unique()
+        )
+
+    filtered_df = df.copy()
+
+    if city_filter != "All":
+        filtered_df = filtered_df[filtered_df["City"] == city_filter]
+
+    filtered_df = filtered_df[
+        (filtered_df["PM2.5"] >= pm25_range[0]) &
+        (filtered_df["PM2.5"] <= pm25_range[1])
+    ]
+
+    filtered_df = filtered_df[
+        filtered_df["AQI Category"].isin(aqi_filter)
+    ]
+
+    st.dataframe(filtered_df.head(20))
+
+    st.subheader("AQI Category Distribution")
+    st.bar_chart(filtered_df["AQI Category"].value_counts())
+
+    st.subheader("PM2.5 Distribution")
     fig, ax = plt.subplots()
-    ax.hist(data["PM2.5"], bins=30)
+    ax.hist(filtered_df["PM2.5"], bins=30)
+    st.pyplot(fig)
+
+    st.subheader("PM2.5 vs PM10")
+    fig, ax = plt.subplots()
+    ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], alpha=0.5)
     st.pyplot(fig)
 
 # ==================================================
-# INDIA MAP PAGE
+# INDIA MAP
 # ==================================================
 elif page == "🗺 India AQ Map":
     st.subheader("India Air Quality Map")
@@ -287,7 +295,7 @@ elif page == "🗺 India AQ Map":
     st_folium(m, width=1000, height=500)
 
 # ==================================================
-# CITY MAP PAGE
+# CITY MAP
 # ==================================================
 elif page == "🏙 City AQ Map":
     st.subheader("City Air Quality Map")
