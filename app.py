@@ -8,6 +8,11 @@ import folium
 from streamlit_folium import st_folium
 
 # --------------------------------------------------
+# BASE DIRECTORY (CRITICAL FOR STREAMLIT CLOUD)
+# --------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# --------------------------------------------------
 # CITY COORDINATES
 # --------------------------------------------------
 CITY_COORDS = {
@@ -35,11 +40,13 @@ st.title("🌫️ Air Quality Analysis & Prediction")
 st.markdown("CMP7005 PRACTICAL – Streamlit Cloud Deployment")
 
 # --------------------------------------------------
-# LOAD DATA
+# LOAD DATA (FIXED PATH)
 # --------------------------------------------------
+DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
+
 @st.cache_data
 def load_data():
-    return pd.read_csv("Data/merged_data.csv")
+    return pd.read_csv(DATA_PATH)
 
 df = load_data()
 
@@ -57,7 +64,7 @@ st.markdown("---")
 # LOAD MODEL (GOOGLE DRIVE)
 # --------------------------------------------------
 MODEL_URL = "https://drive.google.com/uc?id=1N317Atsm71Is04H_P711V3Dk-jr5y1ou"
-MODEL_PATH = "model.pkl"
+MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
 
 @st.cache_resource
 def load_model():
@@ -117,10 +124,7 @@ with tab1:
         pred = model.predict(X)[0]
 
         st.success(f"🌟 Predicted PM2.5: **{pred:.2f} µg/m³**")
-
         st.progress(int(min(pred, 300) / 300 * 100))
-        st.caption("Prediction confidence simulated for visualization")
-
         st.info(f"AQI Category: **{aqi_category(pred)}**")
 
 # ==================================================
@@ -134,10 +138,7 @@ with tab2:
         options=["All"] + sorted(df["City"].unique().tolist())
     )
 
-    if selected_city != "All":
-        filtered_df = df[df["City"] == selected_city]
-    else:
-        filtered_df = df
+    filtered_df = df if selected_city == "All" else df[df["City"] == selected_city]
 
     st.write("### Sample Records")
     st.dataframe(filtered_df.head())
@@ -145,7 +146,6 @@ with tab2:
     st.write("### AQI Category Distribution")
     st.bar_chart(filtered_df["AQI Category"].value_counts())
 
-    st.write("### PM2.5 Range Filter")
     min_pm, max_pm = st.slider(
         "Select PM2.5 Range",
         int(df["PM2.5"].min()),
@@ -159,7 +159,6 @@ with tab2:
     ]
 
     st.bar_chart(range_df["PM2.5"])
-
     st.write("### Dataset Statistics")
     st.dataframe(filtered_df.describe())
 
@@ -170,26 +169,17 @@ with tab3:
     st.subheader("India Air Quality Map (Average PM2.5)")
 
     city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
-
     m = folium.Map(location=[22.5, 80.0], zoom_start=5)
 
     for _, row in city_pm.iterrows():
-        city = row["City"]
-        pm25 = row["PM2.5"]
-
-        if city in CITY_COORDS:
-            lat, lon = CITY_COORDS[city]
-
-            color = (
-                "green" if pm25 <= 30 else
-                "orange" if pm25 <= 60 else
-                "red"
-            )
+        if row["City"] in CITY_COORDS:
+            lat, lon = CITY_COORDS[row["City"]]
+            color = "green" if row["PM2.5"] <= 30 else "orange" if row["PM2.5"] <= 60 else "red"
 
             folium.CircleMarker(
                 location=[lat, lon],
                 radius=8,
-                tooltip=f"{city} | PM2.5: {pm25:.2f}",
+                tooltip=f"{row['City']} | PM2.5: {row['PM2.5']:.2f}",
                 color=color,
                 fill=True,
                 fill_opacity=0.8
@@ -201,6 +191,5 @@ with tab3:
 # FOOTER
 # --------------------------------------------------
 st.markdown("---")
-
 st.markdown("📘 **Course:** CMP7005 – Air Quality Analysis")
 st.markdown("☁️ Deployed on Streamlit Cloud")
