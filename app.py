@@ -86,7 +86,7 @@ def load_model():
 model = load_model()
 
 # --------------------------------------------------
-# AQI FUNCTIONS
+# AQI CATEGORY FUNCTION
 # --------------------------------------------------
 def aqi_category(pm):
     if pm <= 30:
@@ -137,45 +137,37 @@ with tab1:
         st.progress(int(min(pred, 300) / 300 * 100))
 
 # ==================================================
-# TAB 2 – EDA & VISUALISATION (WITH FILTERS)
+# TAB 2 – FILTERED EDA
 # ==================================================
 with tab2:
     st.subheader("Exploratory Data Analysis (Filter-Driven)")
 
-    # -----------------------------
-    # EDA FILTERS
-    # -----------------------------
-    st.markdown("### 🔍 EDA Filters")
+    st.markdown("### 🔍 Filters")
 
     f1, f2, f3 = st.columns(3)
 
     with f1:
         city_filter = st.selectbox(
-            "Select City",
-            ["All"] + sorted(df["City"].unique().tolist())
+            "City",
+            ["All"] + sorted(df["City"].unique())
         )
 
     with f2:
         pm25_range = st.slider(
             "PM2.5 Range (µg/m³)",
-            min_value=float(df["PM2.5"].min()),
-            max_value=float(df["PM2.5"].max()),
-            value=(
-                float(df["PM2.5"].min()),
-                float(df["PM2.5"].max())
-            )
+            float(df["PM2.5"].min()),
+            float(df["PM2.5"].max()),
+            (float(df["PM2.5"].min()), float(df["PM2.5"].max()))
         )
 
     with f3:
         aqi_filter = st.multiselect(
             "AQI Category",
-            options=sorted(df["AQI Category"].unique().tolist()),
-            default=sorted(df["AQI Category"].unique().tolist())
+            df["AQI Category"].unique(),
+            default=df["AQI Category"].unique()
         )
 
-    # -----------------------------
-    # APPLY FILTERS
-    # -----------------------------
+    # Apply filters
     filtered_df = df.copy()
 
     if city_filter != "All":
@@ -186,66 +178,50 @@ with tab2:
         (filtered_df["PM2.5"] <= pm25_range[1])
     ]
 
-    filtered_df = filtered_df[
-        filtered_df["AQI Category"].isin(aqi_filter)
-    ]
+    filtered_df = filtered_df[filtered_df["AQI Category"].isin(aqi_filter)]
 
     st.markdown("---")
 
-    # -----------------------------
-    # DATA PREVIEW
-    # -----------------------------
-    with st.expander("📄 Filtered Dataset Preview", expanded=True):
-        st.dataframe(filtered_df.head(20))
+    st.dataframe(filtered_df.head(20))
 
-    # -----------------------------
-    # AQI CATEGORY DISTRIBUTION
-    # -----------------------------
-    with st.expander("📊 AQI Category Distribution"):
-        st.bar_chart(filtered_df["AQI Category"].value_counts())
+    # AQI Distribution
+    st.subheader("AQI Category Distribution")
+    st.bar_chart(filtered_df["AQI Category"].value_counts())
 
-    # -----------------------------
-    # PM2.5 DISTRIBUTION
-    # -----------------------------
-    with st.expander("📈 PM2.5 Distribution"):
+    # PM2.5 Histogram
+    st.subheader("PM2.5 Distribution")
+    fig, ax = plt.subplots()
+    ax.hist(filtered_df["PM2.5"], bins=30)
+    ax.set_xlabel("PM2.5")
+    ax.set_ylabel("Frequency")
+    st.pyplot(fig)
+
+    # Scatter Plot
+    st.subheader("PM2.5 vs PM10")
+    fig, ax = plt.subplots()
+    ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], alpha=0.5)
+    ax.set_xlabel("PM10")
+    ax.set_ylabel("PM2.5")
+    st.pyplot(fig)
+
+    # Pollutant Comparison
+    st.subheader("Average Pollutant Levels")
+    pollutants = st.multiselect(
+        "Select Pollutants",
+        ["PM10", "SO2", "NO2", "CO", "O3", "NH3"],
+        default=["PM10", "NO2", "SO2"]
+    )
+
+    if pollutants:
+        avg_vals = filtered_df[pollutants].mean()
         fig, ax = plt.subplots()
-        ax.hist(filtered_df["PM2.5"], bins=30)
-        ax.set_xlabel("PM2.5 (µg/m³)")
-        ax.set_ylabel("Frequency")
+        ax.bar(avg_vals.index, avg_vals.values)
+        ax.set_ylabel("Average Concentration")
         st.pyplot(fig)
 
-    # -----------------------------
-    # PM2.5 vs PM10 SCATTER
-    # -----------------------------
-    with st.expander("📉 PM2.5 vs PM10 Relationship"):
-        fig, ax = plt.subplots()
-        ax.scatter(
-            filtered_df["PM10"],
-            filtered_df["PM2.5"],
-            alpha=0.5
-        )
-        ax.set_xlabel("PM10")
-        ax.set_ylabel("PM2.5")
-        st.pyplot(fig)
-
-    # -----------------------------
-    # AVERAGE POLLUTANT COMPARISON
-    # -----------------------------
-    with st.expander("🧪 Average Pollutant Levels"):
-        pollutant_selected = st.multiselect(
-            "Select Pollutants",
-            ["PM10", "SO2", "NO2", "CO", "O3", "NH3"],
-            default=["PM10", "NO2", "SO2"]
-        )
-
-        if pollutant_selected:
-            avg_vals = filtered_df[pollutant_selected].mean()
-            fig, ax = plt.subplots()
-            ax.bar(avg_vals.index, avg_vals.values)
-            ax.set_ylabel("Average Concentration")
-            st.pyplot(fig)
-        e
-
+    # Stats
+    st.subheader("Statistical Summary")
+    st.dataframe(filtered_df.describe())
 
 # ==================================================
 # TAB 3 – INDIA MAP
@@ -254,7 +230,7 @@ with tab3:
     st.subheader("India Air Quality Map (Average PM2.5)")
 
     city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
-    m = folium.Map(location=[22.5, 80.0], zoom_start=5)
+    india_map = folium.Map(location=[22.5, 80.0], zoom_start=5)
 
     for _, row in city_pm.iterrows():
         if row["City"] in CITY_COORDS:
@@ -268,34 +244,22 @@ with tab3:
                 color=color,
                 fill=True,
                 fill_opacity=0.8
-            ).add_to(m)
+            ).add_to(india_map)
 
-    st_folium(m, width=1000, height=500)
+    st_folium(india_map, width=1000, height=500)
 
 # ==================================================
-# TAB 4 – CITY-WISE MAP (FILTERED)
+# TAB 4 – CITY MAP
 # ==================================================
 with tab4:
     st.subheader("City-Specific Air Quality Map")
 
-    city_selected = st.selectbox(
-        "Select City",
-        sorted(df["City"].unique().tolist())
-    )
+    city = st.selectbox("Select City", sorted(df["City"].unique()))
 
-    city_df = df[df["City"] == city_selected]
+    city_df = df[df["City"] == city]
     avg_pm = city_df["PM2.5"].mean()
-    category = aqi_category(avg_pm)
 
-    st.markdown(
-        f"""
-        **City:** {city_selected}  
-        **Average PM2.5:** {avg_pm:.2f} µg/m³  
-        **AQI Category:** {category}
-        """
-    )
-
-    lat, lon = CITY_COORDS.get(city_selected, [22.5, 80.0])
+    lat, lon = CITY_COORDS.get(city, [22.5, 80.0])
 
     city_map = folium.Map(location=[lat, lon], zoom_start=11)
 
@@ -304,11 +268,14 @@ with tab4:
     folium.CircleMarker(
         location=[lat, lon],
         radius=15,
-        tooltip=f"{city_selected} | Avg PM2.5: {avg_pm:.2f}",
+        tooltip=f"{city} | Avg PM2.5: {avg_pm:.2f}",
         color=color,
         fill=True,
         fill_opacity=0.85
     ).add_to(city_map)
+
+    st.markdown(f"**Average PM2.5:** {avg_pm:.2f} µg/m³")
+    st.markdown(f"**AQI Category:** {aqi_category(avg_pm)}")
 
     st_folium(city_map, width=900, height=500)
 
