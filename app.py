@@ -298,16 +298,73 @@ elif page == "🗺 India AQ Map":
 # CITY MAP
 # ==================================================
 elif page == "🏙 City AQ Map":
-    st.subheader("City Air Quality Map")
+    st.subheader("City-Specific Air Quality Map")
 
-    city = st.selectbox("Select City", sorted(df["City"].unique()))
-    avg_pm = df[df["City"] == city]["PM2.5"].mean()
+    city = st.selectbox(
+        "Select City",
+        sorted(df["City"].unique()),
+        key="city_map_select"
+    )
 
-    lat, lon = CITY_COORDS[city]
-    m = folium.Map(location=[lat, lon], zoom_start=11)
+    city_df = df[df["City"] == city]
 
-    folium.CircleMarker([lat, lon], radius=15, fill=True).add_to(m)
+    if city_df.empty:
+        st.warning("No data available for the selected city.")
+        st.stop()
 
-    st.markdown(f"**Average PM2.5:** {avg_pm:.2f}")
-    st.markdown(f"**AQI Category:** {aqi_category(avg_pm)}")
-    st_folium(m, width=900, height=500)
+    avg_pm = city_df["PM2.5"].mean()
+    category = aqi_category(avg_pm)
+
+    # ✅ SAFE coordinate lookup
+    coords = CITY_COORDS.get(city)
+
+    if coords is None:
+        st.warning(
+            f"📍 Coordinates not available for **{city}**. "
+            "Showing default India map location."
+        )
+        lat, lon = 22.5, 80.0  # India center fallback
+        zoom = 5
+    else:
+        lat, lon = coords
+        zoom = 10
+
+    # ✅ Stable Folium map
+    city_map = folium.Map(
+        location=[lat, lon],
+        zoom_start=zoom,
+        tiles="CartoDB positron",
+        control_scale=True
+    )
+
+    # Color logic
+    if avg_pm <= 30:
+        color = "green"
+    elif avg_pm <= 60:
+        color = "orange"
+    else:
+        color = "red"
+
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=18,
+        color=color,
+        fill=True,
+        fill_color=color,
+        fill_opacity=0.85,
+        popup=f"""
+        <b>{city}</b><br>
+        Avg PM2.5: {avg_pm:.2f} µg/m³<br>
+        AQI Category: {category}
+        """
+    ).add_to(city_map)
+
+    st.markdown(f"**Average PM2.5:** {avg_pm:.2f} µg/m³")
+    st.markdown(f"**AQI Category:** {category}")
+
+    st_folium(
+        city_map,
+        width=900,
+        height=500,
+        returned_objects=[]
+    )
