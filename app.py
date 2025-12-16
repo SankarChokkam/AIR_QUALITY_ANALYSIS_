@@ -1,0 +1,206 @@
+import os
+import gdown
+import joblib
+import numpy as np
+import pandas as pd
+import streamlit as st
+import folium
+from streamlit_folium import st_folium
+
+# --------------------------------------------------
+# CITY COORDINATES
+# --------------------------------------------------
+CITY_COORDS = {
+    "Delhi": [28.6139, 77.2090],
+    "Mumbai": [19.0760, 72.8777],
+    "Kolkata": [22.5726, 88.3639],
+    "Chennai": [13.0827, 80.2707],
+    "Bengaluru": [12.9716, 77.5946],
+    "Hyderabad": [17.3850, 78.4867],
+    "Pune": [18.5204, 73.8567],
+    "Ahmedabad": [23.0225, 72.5714],
+    "Jaipur": [26.9124, 75.7873],
+    "Lucknow": [26.8467, 80.9462]
+}
+
+# --------------------------------------------------
+# PAGE CONFIG
+# --------------------------------------------------
+st.set_page_config(
+    page_title="Air Quality Analysis – CMP7005",
+    layout="wide"
+)
+
+st.title("🌫️ Air Quality Analysis & Prediction")
+st.markdown("CMP7005 PRACTICAL – Streamlit Cloud Deployment")
+
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
+@st.cache_data
+def load_data():
+    return pd.read_csv("Data/merged_data.csv")
+
+df = load_data()
+
+# --------------------------------------------------
+# KPI METRICS
+# --------------------------------------------------
+col1, col2, col3 = st.columns(3)
+col1.metric("Average PM2.5", f"{df['PM2.5'].mean():.2f}")
+col2.metric("Maximum PM2.5", f"{df['PM2.5'].max():.2f}")
+col3.metric("Cities Covered", df["City"].nunique())
+
+st.markdown("---")
+
+# --------------------------------------------------
+# LOAD MODEL (GOOGLE DRIVE)
+# --------------------------------------------------
+MODEL_URL = "https://drive.google.com/uc?id=1N317Atsm71Is04H_P711V3Dk-jr5y1ou"
+MODEL_PATH = "model.pkl"
+
+@st.cache_resource
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("⬇️ Downloading ML model (one-time)..."):
+            gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+    return joblib.load(MODEL_PATH)
+
+model = load_model()
+
+# --------------------------------------------------
+# AQI CATEGORY FUNCTION
+# --------------------------------------------------
+def aqi_category(pm):
+    if pm <= 30:
+        return "Good"
+    elif pm <= 60:
+        return "Satisfactory"
+    elif pm <= 90:
+        return "Moderate"
+    elif pm <= 120:
+        return "Poor"
+    elif pm <= 250:
+        return "Very Poor"
+    else:
+        return "Severe"
+
+df["AQI Category"] = df["PM2.5"].apply(aqi_category)
+
+# --------------------------------------------------
+# TABS
+# --------------------------------------------------
+tab1, tab2, tab3 = st.tabs(
+    ["🔮 PM2.5 Prediction", "📊 Dataset & Analysis", "🗺️ Air Quality Map"]
+)
+
+# ==================================================
+# 🔮 TAB 1 – PREDICTION
+# ==================================================
+with tab1:
+    st.subheader("Predict PM2.5 Concentration")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        so2 = st.number_input("SO₂ (µg/m³)", min_value=0.0, value=10.0)
+        no2 = st.number_input("NO₂ (µg/m³)", min_value=0.0, value=20.0)
+        co = st.number_input("CO (mg/m³)", min_value=0.0, value=1.0)
+
+    with col2:
+        o3 = st.number_input("O₃ (µg/m³)", min_value=0.0, value=30.0)
+        pm10 = st.number_input("PM10 (µg/m³)", min_value=0.0, value=50.0)
+        nh3 = st.number_input("NH₃ (µg/m³)", min_value=0.0, value=15.0)
+
+    if st.button("🔮 Predict PM2.5"):
+        X = np.array([[so2, no2, co, o3, pm10, nh3]])
+        pred = model.predict(X)[0]
+
+        st.success(f"🌟 Predicted PM2.5: **{pred:.2f} µg/m³**")
+
+        st.progress(int(min(pred, 300) / 300 * 100))
+        st.caption("Prediction confidence simulated for visualization")
+
+        st.info(f"AQI Category: **{aqi_category(pred)}**")
+
+# ==================================================
+# 📊 TAB 2 – DATASET & INTERACTIVE ANALYSIS
+# ==================================================
+with tab2:
+    st.subheader("Dataset Overview & Interactive Analysis")
+
+    selected_city = st.selectbox(
+        "Filter by City",
+        options=["All"] + sorted(df["City"].unique().tolist())
+    )
+
+    if selected_city != "All":
+        filtered_df = df[df["City"] == selected_city]
+    else:
+        filtered_df = df
+
+    st.write("### Sample Records")
+    st.dataframe(filtered_df.head())
+
+    st.write("### AQI Category Distribution")
+    st.bar_chart(filtered_df["AQI Category"].value_counts())
+
+    st.write("### PM2.5 Range Filter")
+    min_pm, max_pm = st.slider(
+        "Select PM2.5 Range",
+        int(df["PM2.5"].min()),
+        int(df["PM2.5"].max()),
+        (0, 200)
+    )
+
+    range_df = filtered_df[
+        (filtered_df["PM2.5"] >= min_pm) &
+        (filtered_df["PM2.5"] <= max_pm)
+    ]
+
+    st.bar_chart(range_df["PM2.5"])
+
+    st.write("### Dataset Statistics")
+    st.dataframe(filtered_df.describe())
+
+# ==================================================
+# 🗺️ TAB 3 – AIR QUALITY MAP
+# ==================================================
+with tab3:
+    st.subheader("India Air Quality Map (Average PM2.5)")
+
+    city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
+
+    m = folium.Map(location=[22.5, 80.0], zoom_start=5)
+
+    for _, row in city_pm.iterrows():
+        city = row["City"]
+        pm25 = row["PM2.5"]
+
+        if city in CITY_COORDS:
+            lat, lon = CITY_COORDS[city]
+
+            color = (
+                "green" if pm25 <= 30 else
+                "orange" if pm25 <= 60 else
+                "red"
+            )
+
+            folium.CircleMarker(
+                location=[lat, lon],
+                radius=8,
+                tooltip=f"{city} | PM2.5: {pm25:.2f}",
+                color=color,
+                fill=True,
+                fill_opacity=0.8
+            ).add_to(m)
+
+    st_folium(m, width=1000, height=500)
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
+st.markdown("---")
+
+st.markdown("📘 **Course:** CMP7005 – Air Quality Analysis")
+st.markdown("☁️ Deployed on Streamlit Cloud")
