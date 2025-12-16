@@ -18,79 +18,81 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# CUSTOM CSS (ANIMATIONS + UI)
+# CUSTOM CSS (CLEAN, HUMAN-DESIGNED UI)
 # --------------------------------------------------
 st.markdown("""
 <style>
-
-/* Global */
 html, body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: #0b1220;
 }
 
-/* Animated title */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(25px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #020617;
 }
 
-.hero-title {
-    font-size: 3rem;
+/* Hero */
+.hero {
+    background: linear-gradient(135deg, #111827, #020617);
+    padding: 3.5rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 3rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.hero h1 {
+    font-size: 2.6rem;
     font-weight: 700;
-    text-align: center;
-    animation: fadeInUp 1.2s ease-out;
+    color: #f9fafb;
+    margin-bottom: 0.6rem;
 }
 
-.hero-subtitle {
-    text-align: center;
-    color: #6b7280;
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    animation: fadeInUp 1.6s ease-out;
+.hero p {
+    font-size: 1.15rem;
+    color: #cbd5f5;
 }
 
-/* Floating cards */
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-    100% { transform: translateY(0px); }
-}
-
+/* Cards */
 .card {
-    background: linear-gradient(135deg, #f8fafc, #e5e7eb);
-    border-radius: 18px;
+    background: #111827;
+    border-radius: 16px;
     padding: 1.8rem;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    animation: float 4s ease-in-out infinite;
+    height: 100%;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.5);
 }
 
 .card h3 {
-    margin-bottom: 0.5rem;
+    color: #f9fafb;
+    margin-bottom: 0.6rem;
 }
 
 .card p {
-    color: #374151;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* CTA + Footer */
+.cta {
+    text-align: center;
+    color: #9ca3af;
+    margin-top: 2.5rem;
     font-size: 0.95rem;
 }
 
-/* Section spacing */
-.section {
-    margin-top: 3rem;
-}
-
-/* Footer */
 .footer {
     text-align: center;
     color: #6b7280;
     margin-top: 4rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -117,7 +119,7 @@ CITY_COORDS = {
 }
 
 # --------------------------------------------------
-# SIDEBAR – NAVIGATION
+# SIDEBAR NAVIGATION
 # --------------------------------------------------
 st.sidebar.title("🌫 Air Quality Dashboard")
 
@@ -174,20 +176,27 @@ def aqi_category(pm):
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 
 # ==================================================
-# 🏠 HOME PAGE (ANIMATED)
+# HOME PAGE
 # ==================================================
 if page == "🏠 Home":
 
-    st.markdown('<div class="hero-title">Air Quality Analysis Dashboard</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-subtitle">Predict, analyze, and visualize air pollution trends across Indian cities</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="hero">
+        <h1>Air Quality Analysis Dashboard</h1>
+        <p>Predict, analyze, and visualize air pollution trends across Indian cities</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
 
     with c1:
         st.markdown("""
         <div class="card">
-            <h3>🔮 Prediction</h3>
-            <p>Machine learning model to predict PM2.5 concentration using key pollutants.</p>
+            <h3>🔮 PM2.5 Prediction</h3>
+            <p>
+            Use a machine learning model to estimate PM2.5 concentration 
+            based on key atmospheric pollutants.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -195,37 +204,48 @@ if page == "🏠 Home":
         st.markdown("""
         <div class="card">
             <h3>📊 Data Insights</h3>
-            <p>Interactive exploratory analysis with filters for city, AQI, and pollution range.</p>
+            <p>
+            Perform interactive exploratory analysis with city filters, 
+            AQI categories, and pollution ranges.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
     with c3:
         st.markdown("""
         <div class="card">
-            <h3>🗺 Geospatial View</h3>
-            <p>City-wise and India-level air quality maps for spatial understanding.</p>
+            <h3>🗺 Geospatial Analysis</h3>
+            <p>
+            Explore India-wide and city-specific air quality maps to 
+            understand spatial pollution patterns.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("""
+    <div class="cta">
+        👉 Use the sidebar on the left to start exploring the dashboard modules.
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
     <div class="footer">
-        Use the sidebar to explore predictions, analysis, and maps.<br>
-        Designed for CMP7005 · Streamlit Cloud Deployment
+        CMP7005 · Air Quality Analysis · Streamlit Cloud Deployment
     </div>
     """, unsafe_allow_html=True)
 
 # ==================================================
-# 🔮 PREDICTION PAGE
+# PREDICTION PAGE
 # ==================================================
 elif page == "🔮 PM2.5 Prediction":
     st.subheader("Predict PM2.5 Concentration")
 
-    col1, col2 = st.columns(2)
-    with col1:
+    c1, c2 = st.columns(2)
+    with c1:
         so2 = st.number_input("SO₂", 0.0, value=10.0)
         no2 = st.number_input("NO₂", 0.0, value=20.0)
         co = st.number_input("CO", 0.0, value=1.0)
-    with col2:
+    with c2:
         o3 = st.number_input("O₃", 0.0, value=30.0)
         pm10 = st.number_input("PM10", 0.0, value=50.0)
         nh3 = st.number_input("NH₃", 0.0, value=15.0)
@@ -235,7 +255,7 @@ elif page == "🔮 PM2.5 Prediction":
         st.success(f"Predicted PM2.5: {pred:.2f} µg/m³")
 
 # ==================================================
-# 📊 EDA PAGE
+# EDA PAGE
 # ==================================================
 elif page == "📊 EDA & Visualisation":
     st.subheader("Exploratory Data Analysis")
@@ -251,7 +271,7 @@ elif page == "📊 EDA & Visualisation":
     st.pyplot(fig)
 
 # ==================================================
-# 🗺 INDIA MAP
+# INDIA MAP PAGE
 # ==================================================
 elif page == "🗺 India AQ Map":
     st.subheader("India Air Quality Map")
@@ -267,7 +287,7 @@ elif page == "🗺 India AQ Map":
     st_folium(m, width=1000, height=500)
 
 # ==================================================
-# 🏙 CITY MAP
+# CITY MAP PAGE
 # ==================================================
 elif page == "🏙 City AQ Map":
     st.subheader("City Air Quality Map")
