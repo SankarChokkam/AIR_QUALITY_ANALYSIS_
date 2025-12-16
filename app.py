@@ -9,6 +9,93 @@ import matplotlib.pyplot as plt
 from streamlit_folium import st_folium
 
 # --------------------------------------------------
+# PAGE CONFIG
+# --------------------------------------------------
+st.set_page_config(
+    page_title="Air Quality Analysis – CMP7005",
+    layout="wide",
+    page_icon="🌫"
+)
+
+# --------------------------------------------------
+# CUSTOM CSS (ANIMATIONS + UI)
+# --------------------------------------------------
+st.markdown("""
+<style>
+
+/* Global */
+html, body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Animated title */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+    animation: fadeInUp 1.2s ease-out;
+}
+
+.hero-subtitle {
+    text-align: center;
+    color: #6b7280;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 1.6s ease-out;
+}
+
+/* Floating cards */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+}
+
+.card {
+    background: linear-gradient(135deg, #f8fafc, #e5e7eb);
+    border-radius: 18px;
+    padding: 1.8rem;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    animation: float 4s ease-in-out infinite;
+}
+
+.card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.card p {
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+/* Section spacing */
+.section {
+    margin-top: 3rem;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: #6b7280;
+    margin-top: 4rem;
+    font-size: 0.9rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --------------------------------------------------
 # BASE DIRECTORY
 # --------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,21 +117,14 @@ CITY_COORDS = {
 }
 
 # --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
-st.set_page_config(
-    page_title="Air Quality Analysis – CMP7005",
-    layout="wide"
-)
-
-# --------------------------------------------------
 # SIDEBAR – NAVIGATION
 # --------------------------------------------------
-st.sidebar.title("📊 Dashboard Navigation")
+st.sidebar.title("🌫 Air Quality Dashboard")
 
 page = st.sidebar.radio(
-    "Select Page",
+    "Navigate",
     [
+        "🏠 Home",
         "🔮 PM2.5 Prediction",
         "📊 EDA & Visualisation",
         "🗺 India AQ Map",
@@ -53,13 +133,7 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("CMP7005 – Air Quality Analysis")
-
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
-st.title("🌫 Air Quality Analysis & Prediction")
-st.markdown("CMP7005 Practical – Streamlit Cloud Deployment")
+st.sidebar.caption("CMP7005 · Streamlit Cloud")
 
 # --------------------------------------------------
 # LOAD DATA
@@ -73,16 +147,6 @@ def load_data():
 df = load_data()
 
 # --------------------------------------------------
-# KPI METRICS (GLOBAL)
-# --------------------------------------------------
-c1, c2, c3 = st.columns(3)
-c1.metric("🌫 Avg PM2.5", f"{df['PM2.5'].mean():.2f}")
-c2.metric("🚨 Max PM2.5", f"{df['PM2.5'].max():.2f}")
-c3.metric("🏙 Cities Covered", df["City"].nunique())
-
-st.markdown("---")
-
-# --------------------------------------------------
 # LOAD MODEL
 # --------------------------------------------------
 MODEL_URL = "https://drive.google.com/uc?id=1N317Atsm71Is04H_P711V3Dk-jr5y1ou"
@@ -91,8 +155,7 @@ MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("⬇ Downloading ML model..."):
-            gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
     return joblib.load(MODEL_PATH)
 
 model = load_model()
@@ -101,161 +164,122 @@ model = load_model()
 # AQI FUNCTION
 # --------------------------------------------------
 def aqi_category(pm):
-    if pm <= 30:
-        return "Good"
-    elif pm <= 60:
-        return "Satisfactory"
-    elif pm <= 90:
-        return "Moderate"
-    elif pm <= 120:
-        return "Poor"
-    elif pm <= 250:
-        return "Very Poor"
-    else:
-        return "Severe"
+    if pm <= 30: return "Good"
+    elif pm <= 60: return "Satisfactory"
+    elif pm <= 90: return "Moderate"
+    elif pm <= 120: return "Poor"
+    elif pm <= 250: return "Very Poor"
+    else: return "Severe"
 
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 
 # ==================================================
-# PAGE 1 – PREDICTION
+# 🏠 HOME PAGE (ANIMATED)
 # ==================================================
-if page == "🔮 PM2.5 Prediction":
+if page == "🏠 Home":
+
+    st.markdown('<div class="hero-title">Air Quality Analysis Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Predict, analyze, and visualize air pollution trends across Indian cities</div>', unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.markdown("""
+        <div class="card">
+            <h3>🔮 Prediction</h3>
+            <p>Machine learning model to predict PM2.5 concentration using key pollutants.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("""
+        <div class="card">
+            <h3>📊 Data Insights</h3>
+            <p>Interactive exploratory analysis with filters for city, AQI, and pollution range.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c3:
+        st.markdown("""
+        <div class="card">
+            <h3>🗺 Geospatial View</h3>
+            <p>City-wise and India-level air quality maps for spatial understanding.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="footer">
+        Use the sidebar to explore predictions, analysis, and maps.<br>
+        Designed for CMP7005 · Streamlit Cloud Deployment
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================================================
+# 🔮 PREDICTION PAGE
+# ==================================================
+elif page == "🔮 PM2.5 Prediction":
     st.subheader("Predict PM2.5 Concentration")
 
     col1, col2 = st.columns(2)
-
     with col1:
-        so2 = st.number_input("SO₂ (µg/m³)", 0.0, value=10.0)
-        no2 = st.number_input("NO₂ (µg/m³)", 0.0, value=20.0)
-        co = st.number_input("CO (mg/m³)", 0.0, value=1.0)
-
+        so2 = st.number_input("SO₂", 0.0, value=10.0)
+        no2 = st.number_input("NO₂", 0.0, value=20.0)
+        co = st.number_input("CO", 0.0, value=1.0)
     with col2:
-        o3 = st.number_input("O₃ (µg/m³)", 0.0, value=30.0)
-        pm10 = st.number_input("PM10 (µg/m³)", 0.0, value=50.0)
-        nh3 = st.number_input("NH₃ (µg/m³)", 0.0, value=15.0)
+        o3 = st.number_input("O₃", 0.0, value=30.0)
+        pm10 = st.number_input("PM10", 0.0, value=50.0)
+        nh3 = st.number_input("NH₃", 0.0, value=15.0)
 
-    if st.button("🔮 Predict PM2.5"):
-        X = np.array([[so2, no2, co, o3, pm10, nh3]])
-        pred = model.predict(X)[0]
-
+    if st.button("Predict PM2.5"):
+        pred = model.predict(np.array([[so2, no2, co, o3, pm10, nh3]]))[0]
         st.success(f"Predicted PM2.5: {pred:.2f} µg/m³")
-        st.progress(int(min(pred, 300) / 300 * 100))
 
 # ==================================================
-# PAGE 2 – FILTERED EDA
+# 📊 EDA PAGE
 # ==================================================
 elif page == "📊 EDA & Visualisation":
-    st.subheader("Exploratory Data Analysis (Filter-Driven)")
+    st.subheader("Exploratory Data Analysis")
 
-    f1, f2, f3 = st.columns(3)
+    city = st.selectbox("City", ["All"] + sorted(df["City"].unique()))
+    data = df if city == "All" else df[df["City"] == city]
 
-    with f1:
-        city_filter = st.selectbox(
-            "City",
-            ["All"] + sorted(df["City"].unique())
-        )
+    st.dataframe(data.head(20))
+    st.bar_chart(data["AQI Category"].value_counts())
 
-    with f2:
-        pm25_range = st.slider(
-            "PM2.5 Range",
-            float(df["PM2.5"].min()),
-            float(df["PM2.5"].max()),
-            (float(df["PM2.5"].min()), float(df["PM2.5"].max()))
-        )
-
-    with f3:
-        aqi_filter = st.multiselect(
-            "AQI Category",
-            df["AQI Category"].unique(),
-            default=df["AQI Category"].unique()
-        )
-
-    filtered_df = df.copy()
-
-    if city_filter != "All":
-        filtered_df = filtered_df[filtered_df["City"] == city_filter]
-
-    filtered_df = filtered_df[
-        (filtered_df["PM2.5"] >= pm25_range[0]) &
-        (filtered_df["PM2.5"] <= pm25_range[1])
-    ]
-
-    filtered_df = filtered_df[
-        filtered_df["AQI Category"].isin(aqi_filter)
-    ]
-
-    st.dataframe(filtered_df.head(20))
-
-    st.subheader("AQI Category Distribution")
-    st.bar_chart(filtered_df["AQI Category"].value_counts())
-
-    st.subheader("PM2.5 Distribution")
     fig, ax = plt.subplots()
-    ax.hist(filtered_df["PM2.5"], bins=30)
-    st.pyplot(fig)
-
-    st.subheader("PM2.5 vs PM10")
-    fig, ax = plt.subplots()
-    ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], alpha=0.5)
+    ax.hist(data["PM2.5"], bins=30)
     st.pyplot(fig)
 
 # ==================================================
-# PAGE 3 – INDIA MAP
+# 🗺 INDIA MAP
 # ==================================================
 elif page == "🗺 India AQ Map":
-    st.subheader("India Air Quality Map (Average PM2.5)")
+    st.subheader("India Air Quality Map")
 
     city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
-    india_map = folium.Map(location=[22.5, 80.0], zoom_start=5)
+    m = folium.Map(location=[22.5, 80.0], zoom_start=5)
 
     for _, row in city_pm.iterrows():
         if row["City"] in CITY_COORDS:
             lat, lon = CITY_COORDS[row["City"]]
-            color = "green" if row["PM2.5"] <= 30 else "orange" if row["PM2.5"] <= 60 else "red"
+            folium.CircleMarker([lat, lon], radius=8, fill=True).add_to(m)
 
-            folium.CircleMarker(
-                [lat, lon],
-                radius=8,
-                tooltip=f"{row['City']} | PM2.5: {row['PM2.5']:.2f}",
-                color=color,
-                fill=True,
-                fill_opacity=0.8
-            ).add_to(india_map)
-
-    st_folium(india_map, width=1000, height=500)
+    st_folium(m, width=1000, height=500)
 
 # ==================================================
-# PAGE 4 – CITY MAP
+# 🏙 CITY MAP
 # ==================================================
 elif page == "🏙 City AQ Map":
-    st.subheader("City-Specific Air Quality Map")
+    st.subheader("City Air Quality Map")
 
     city = st.selectbox("Select City", sorted(df["City"].unique()))
-    city_df = df[df["City"] == city]
-    avg_pm = city_df["PM2.5"].mean()
+    avg_pm = df[df["City"] == city]["PM2.5"].mean()
 
-    lat, lon = CITY_COORDS.get(city, [22.5, 80.0])
-    city_map = folium.Map(location=[lat, lon], zoom_start=11)
+    lat, lon = CITY_COORDS[city]
+    m = folium.Map(location=[lat, lon], zoom_start=11)
 
-    color = "green" if avg_pm <= 30 else "orange" if avg_pm <= 60 else "red"
-
-    folium.CircleMarker(
-        [lat, lon],
-        radius=15,
-        tooltip=f"{city} | Avg PM2.5: {avg_pm:.2f}",
-        color=color,
-        fill=True,
-        fill_opacity=0.85
-    ).add_to(city_map)
+    folium.CircleMarker([lat, lon], radius=15, fill=True).add_to(m)
 
     st.markdown(f"**Average PM2.5:** {avg_pm:.2f}")
     st.markdown(f"**AQI Category:** {aqi_category(avg_pm)}")
-
-    st_folium(city_map, width=900, height=500)
-
-# --------------------------------------------------
-# FOOTER
-# --------------------------------------------------
-st.markdown("---")
-st.markdown("📘 Course: CMP7005 – Air Quality Analysis")
-st.markdown("☁ Deployed on Streamlit Cloud")
+    st_folium(m, width=900, height=500)
