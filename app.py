@@ -196,8 +196,13 @@ with tab2:
         st.pyplot(fig)
 
     with st.expander("🏙 City-wise Average PM2.5"):
-        city_avg = filtered_df.groupby("City")["PM2.5"].mean()
-        st.bar_chart(city_avg)
+    city_avg = (
+        filtered_df
+        .groupby("City", as_index=False)["PM2.5"]
+        .mean()
+        .set_index("City")
+    )
+    st.bar_chart(city_avg)
 
     with st.expander("🔗 Correlation Heatmap"):
         corr = filtered_df[
