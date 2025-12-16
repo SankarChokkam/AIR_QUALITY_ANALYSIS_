@@ -140,7 +140,7 @@ with tab1:
 # TAB 2 – FILTERED EDA
 # ==================================================
 with tab2:
-    st.subheader("Exploratory Data Analysis (Filter-Driven)")
+    st.subheader("Exploratory Data Analysis ")
 
     st.markdown("### 🔍 Filters")
 
