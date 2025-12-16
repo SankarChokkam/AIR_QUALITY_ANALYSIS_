@@ -5,12 +5,13 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import folium
+import matplotlib.pyplot as plt
 from streamlit_folium import st_folium
 
 # --------------------------------------------------
-# BASE DIRECTORY (CRITICAL FOR STREAMLIT CLOUD)
+# BASE DIRECTORY
 # --------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(_file_))
 
 # --------------------------------------------------
 # CITY COORDINATES
@@ -36,11 +37,11 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🌫️ Air Quality Analysis & Prediction")
-st.markdown("CMP7005 PRACTICAL – Streamlit Cloud Deployment")
+st.title("🌫 Air Quality Analysis & Prediction")
+st.markdown("*CMP7005 Practical – Streamlit Cloud Deployment*")
 
 # --------------------------------------------------
-# LOAD DATA (FIXED PATH)
+# LOAD DATA
 # --------------------------------------------------
 DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
 
@@ -53,15 +54,15 @@ df = load_data()
 # --------------------------------------------------
 # KPI METRICS
 # --------------------------------------------------
-col1, col2, col3 = st.columns(3)
-col1.metric("Average PM2.5", f"{df['PM2.5'].mean():.2f}")
-col2.metric("Maximum PM2.5", f"{df['PM2.5'].max():.2f}")
-col3.metric("Cities Covered", df["City"].nunique())
+c1, c2, c3 = st.columns(3)
+c1.metric("Average PM2.5", f"{df['PM2.5'].mean():.2f}")
+c2.metric("Maximum PM2.5", f"{df['PM2.5'].max():.2f}")
+c3.metric("Cities Covered", df["City"].nunique())
 
 st.markdown("---")
 
 # --------------------------------------------------
-# LOAD MODEL (GOOGLE DRIVE)
+# LOAD MODEL
 # --------------------------------------------------
 MODEL_URL = "https://drive.google.com/uc?id=1N317Atsm71Is04H_P711V3Dk-jr5y1ou"
 MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
@@ -69,7 +70,7 @@ MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("⬇️ Downloading ML model (one-time)..."):
+        with st.spinner("⬇ Downloading ML model..."):
             gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
     return joblib.load(MODEL_PATH)
 
@@ -98,7 +99,7 @@ df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 # TABS
 # --------------------------------------------------
 tab1, tab2, tab3 = st.tabs(
-    ["🔮 PM2.5 Prediction", "📊 Dataset & Analysis", "🗺️ Air Quality Map"]
+    ["🔮 PM2.5 Prediction", "📊 EDA & Visualisation", "🗺 Air Quality Map"]
 )
 
 # ==================================================
@@ -123,19 +124,19 @@ with tab1:
         X = np.array([[so2, no2, co, o3, pm10, nh3]])
         pred = model.predict(X)[0]
 
-        st.success(f"🌟 Predicted PM2.5: **{pred:.2f} µg/m³**")
+        st.success(f"🌟 Predicted PM2.5: *{pred:.2f} µg/m³*")
         st.progress(int(min(pred, 300) / 300 * 100))
-        st.info(f"AQI Category: **{aqi_category(pred)}**")
+        st.info(f"AQI Category: *{aqi_category(pred)}*")
 
 # ==================================================
-# 📊 TAB 2 – DATASET & INTERACTIVE ANALYSIS
+# 📊 TAB 2 – EDA & VISUALISATION
 # ==================================================
 with tab2:
-    st.subheader("Dataset Overview & Interactive Analysis")
+    st.subheader("Exploratory Data Analysis (EDA)")
 
     selected_city = st.selectbox(
         "Filter by City",
-        options=["All"] + sorted(df["City"].unique().tolist())
+        ["All"] + sorted(df["City"].unique().tolist())
     )
 
     filtered_df = df if selected_city == "All" else df[df["City"] == selected_city]
@@ -143,9 +144,12 @@ with tab2:
     st.write("### Sample Records")
     st.dataframe(filtered_df.head())
 
+    # AQI CATEGORY DISTRIBUTION
     st.write("### AQI Category Distribution")
     st.bar_chart(filtered_df["AQI Category"].value_counts())
 
+    # PM2.5 RANGE FILTER
+    st.write("### PM2.5 Range Filter")
     min_pm, max_pm = st.slider(
         "Select PM2.5 Range",
         int(df["PM2.5"].min()),
@@ -158,12 +162,53 @@ with tab2:
         (filtered_df["PM2.5"] <= max_pm)
     ]
 
-    st.bar_chart(range_df["PM2.5"])
+    # PM2.5 DISTRIBUTION
+    st.write("### PM2.5 Distribution")
+    fig, ax = plt.subplots()
+    ax.hist(range_df["PM2.5"], bins=30)
+    ax.set_xlabel("PM2.5")
+    ax.set_ylabel("Frequency")
+    st.pyplot(fig)
+
+    # CITY-WISE AVERAGE PM2.5
+    st.write("### City-wise Average PM2.5")
+    city_avg = filtered_df.groupby("City")["PM2.5"].mean()
+    st.bar_chart(city_avg)
+
+    # CORRELATION HEATMAP
+    st.write("### Correlation Heatmap")
+    corr = filtered_df[
+        ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3", "NH3"]
+    ].corr()
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(corr)
+    ax.set_xticks(range(len(corr.columns)))
+    ax.set_yticks(range(len(corr.columns)))
+    ax.set_xticklabels(corr.columns, rotation=45)
+    ax.set_yticklabels(corr.columns)
+    plt.colorbar(im)
+    st.pyplot(fig)
+
+    # POLLUTANT VS PM2.5
+    st.write("### Pollutant vs PM2.5 Relationship")
+    pollutant = st.selectbox(
+        "Select Pollutant",
+        ["PM10", "SO2", "NO2", "CO", "O3", "NH3"]
+    )
+
+    fig, ax = plt.subplots()
+    ax.scatter(filtered_df[pollutant], filtered_df["PM2.5"], alpha=0.5)
+    ax.set_xlabel(pollutant)
+    ax.set_ylabel("PM2.5")
+    st.pyplot(fig)
+
+    # DATASET STATISTICS
     st.write("### Dataset Statistics")
     st.dataframe(filtered_df.describe())
 
 # ==================================================
-# 🗺️ TAB 3 – AIR QUALITY MAP
+# 🗺 TAB 3 – MAP
 # ==================================================
 with tab3:
     st.subheader("India Air Quality Map (Average PM2.5)")
@@ -191,5 +236,5 @@ with tab3:
 # FOOTER
 # --------------------------------------------------
 st.markdown("---")
-st.markdown("📘 **Course:** CMP7005 – Air Quality Analysis")
-st.markdown("☁️ Deployed on Streamlit Cloud")
+st.markdown("📘 *Course:* CMP7005 – Air Quality Analysis")
+st.markdown("☁ *Deployed on Streamlit Cloud*")
