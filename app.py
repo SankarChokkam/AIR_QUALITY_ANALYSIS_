@@ -137,27 +137,115 @@ with tab1:
         st.progress(int(min(pred, 300) / 300 * 100))
 
 # ==================================================
-# TAB 2 – EDA & VISUALISATION
+# TAB 2 – EDA & VISUALISATION (WITH FILTERS)
 # ==================================================
 with tab2:
-    st.subheader("Exploratory Data Analysis")
+    st.subheader("Exploratory Data Analysis (Filter-Driven)")
 
-    selected_city = st.sidebar.selectbox(
-        "🌆 Filter by City",
-        ["All"] + sorted(df["City"].unique().tolist())
-    )
+    # -----------------------------
+    # EDA FILTERS
+    # -----------------------------
+    st.markdown("### 🔍 EDA Filters")
 
-    filtered_df = df if selected_city == "All" else df[df["City"] == selected_city]
+    f1, f2, f3 = st.columns(3)
 
-    st.dataframe(filtered_df.head())
+    with f1:
+        city_filter = st.selectbox(
+            "Select City",
+            ["All"] + sorted(df["City"].unique().tolist())
+        )
 
-    st.bar_chart(filtered_df["AQI Category"].value_counts())
+    with f2:
+        pm25_range = st.slider(
+            "PM2.5 Range (µg/m³)",
+            min_value=float(df["PM2.5"].min()),
+            max_value=float(df["PM2.5"].max()),
+            value=(
+                float(df["PM2.5"].min()),
+                float(df["PM2.5"].max())
+            )
+        )
 
-    fig, ax = plt.subplots()
-    ax.hist(filtered_df["PM2.5"], bins=30)
-    ax.set_xlabel("PM2.5")
-    ax.set_ylabel("Frequency")
-    st.pyplot(fig)
+    with f3:
+        aqi_filter = st.multiselect(
+            "AQI Category",
+            options=sorted(df["AQI Category"].unique().tolist()),
+            default=sorted(df["AQI Category"].unique().tolist())
+        )
+
+    # -----------------------------
+    # APPLY FILTERS
+    # -----------------------------
+    filtered_df = df.copy()
+
+    if city_filter != "All":
+        filtered_df = filtered_df[filtered_df["City"] == city_filter]
+
+    filtered_df = filtered_df[
+        (filtered_df["PM2.5"] >= pm25_range[0]) &
+        (filtered_df["PM2.5"] <= pm25_range[1])
+    ]
+
+    filtered_df = filtered_df[
+        filtered_df["AQI Category"].isin(aqi_filter)
+    ]
+
+    st.markdown("---")
+
+    # -----------------------------
+    # DATA PREVIEW
+    # -----------------------------
+    with st.expander("📄 Filtered Dataset Preview", expanded=True):
+        st.dataframe(filtered_df.head(20))
+
+    # -----------------------------
+    # AQI CATEGORY DISTRIBUTION
+    # -----------------------------
+    with st.expander("📊 AQI Category Distribution"):
+        st.bar_chart(filtered_df["AQI Category"].value_counts())
+
+    # -----------------------------
+    # PM2.5 DISTRIBUTION
+    # -----------------------------
+    with st.expander("📈 PM2.5 Distribution"):
+        fig, ax = plt.subplots()
+        ax.hist(filtered_df["PM2.5"], bins=30)
+        ax.set_xlabel("PM2.5 (µg/m³)")
+        ax.set_ylabel("Frequency")
+        st.pyplot(fig)
+
+    # -----------------------------
+    # PM2.5 vs PM10 SCATTER
+    # -----------------------------
+    with st.expander("📉 PM2.5 vs PM10 Relationship"):
+        fig, ax = plt.subplots()
+        ax.scatter(
+            filtered_df["PM10"],
+            filtered_df["PM2.5"],
+            alpha=0.5
+        )
+        ax.set_xlabel("PM10")
+        ax.set_ylabel("PM2.5")
+        st.pyplot(fig)
+
+    # -----------------------------
+    # AVERAGE POLLUTANT COMPARISON
+    # -----------------------------
+    with st.expander("🧪 Average Pollutant Levels"):
+        pollutant_selected = st.multiselect(
+            "Select Pollutants",
+            ["PM10", "SO2", "NO2", "CO", "O3", "NH3"],
+            default=["PM10", "NO2", "SO2"]
+        )
+
+        if pollutant_selected:
+            avg_vals = filtered_df[pollutant_selected].mean()
+            fig, ax = plt.subplots()
+            ax.bar(avg_vals.index, avg_vals.values)
+            ax.set_ylabel("Average Concentration")
+            st.pyplot(fig)
+        e
+
 
 # ==================================================
 # TAB 3 – INDIA MAP
