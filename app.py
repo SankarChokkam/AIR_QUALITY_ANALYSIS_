@@ -38,10 +38,10 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# SIDEBAR (VISUAL ONLY)
+# SIDEBAR
 # --------------------------------------------------
 st.sidebar.title("⚙ Controls")
-st.sidebar.markdown("Explore air quality data interactively")
+st.sidebar.markdown("Interactive air quality analysis")
 
 # --------------------------------------------------
 # TITLE
@@ -61,7 +61,7 @@ def load_data():
 df = load_data()
 
 # --------------------------------------------------
-# KPI METRICS (STYLED)
+# KPI METRICS
 # --------------------------------------------------
 c1, c2, c3 = st.columns(3)
 c1.metric("🌫 Avg PM2.5", f"{df['PM2.5'].mean():.2f}")
@@ -102,17 +102,6 @@ def aqi_category(pm):
     else:
         return "Severe"
 
-def aqi_badge(category):
-    colors = {
-        "Good": "#22c55e",
-        "Satisfactory": "#a3e635",
-        "Moderate": "#facc15",
-        "Poor": "#fb923c",
-        "Very Poor": "#ef4444",
-        "Severe": "#7f1d1d"
-    }
-    return f"<span style='color:white;background:{colors[category]};padding:6px 14px;border-radius:14px;font-weight:600'>{category}</span>"
-
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
 
 # --------------------------------------------------
@@ -123,7 +112,7 @@ tab1, tab2, tab3 = st.tabs(
 )
 
 # ==================================================
-# 🔮 TAB 1 – PREDICTION
+# TAB 1 – PREDICTION
 # ==================================================
 with tab1:
     st.subheader("Predict PM2.5 Concentration")
@@ -144,25 +133,14 @@ with tab1:
         X = np.array([[so2, no2, co, o3, pm10, nh3]])
         pred = model.predict(X)[0]
 
-        st.markdown(
-            f"""
-            <div style="padding:20px;border-radius:14px;
-                        background-color:#0E1117;
-                        border-left:6px solid #22c55e">
-                <h3>Predicted PM2.5: {pred:.2f} µg/m³</h3>
-                <p>AQI Category: {aqi_badge(aqi_category(pred))}</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
+        st.success(f"Predicted PM2.5: *{pred:.2f} µg/m³*")
         st.progress(int(min(pred, 300) / 300 * 100))
 
 # ==================================================
-# 📊 TAB 2 – EDA & VISUALISATION
+# TAB 2 – EDA & VISUALISATION
 # ==================================================
 with tab2:
-    st.subheader("Exploratory Data Analysis (EDA)")
+    st.subheader("Exploratory Data Analysis")
 
     selected_city = st.sidebar.selectbox(
         "🌆 Filter by City",
@@ -178,67 +156,43 @@ with tab2:
         st.bar_chart(filtered_df["AQI Category"].value_counts())
 
     with st.expander("📈 PM2.5 Distribution"):
-        min_pm, max_pm = st.slider(
-            "Select PM2.5 Range",
-            int(df["PM2.5"].min()),
-            int(df["PM2.5"].max()),
-            (0, 200)
-        )
-        range_df = filtered_df[
-            (filtered_df["PM2.5"] >= min_pm) &
-            (filtered_df["PM2.5"] <= max_pm)
-        ]
-
         fig, ax = plt.subplots()
-        ax.hist(range_df["PM2.5"], bins=30)
+        ax.hist(filtered_df["PM2.5"], bins=30)
         ax.set_xlabel("PM2.5")
         ax.set_ylabel("Frequency")
         st.pyplot(fig)
 
-    with st.expander("🏙 City-wise Average PM2.5"):
-    city_avg = (
-        filtered_df
-        .groupby("City", as_index=False)["PM2.5"]
-        .mean()
-        .set_index("City")
-    )
-    st.bar_chart(city_avg)
-
-    with st.expander("🔗 Correlation Heatmap"):
-        corr = filtered_df[
-            ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3", "NH3"]
-        ].corr()
-
+    with st.expander("📊 AQI Category Percentage"):
+        aqi_pct = filtered_df["AQI Category"].value_counts(normalize=True) * 100
         fig, ax = plt.subplots()
-        im = ax.imshow(corr)
-        ax.set_xticks(range(len(corr.columns)))
-        ax.set_yticks(range(len(corr.columns)))
-        ax.set_xticklabels(corr.columns, rotation=45)
-        ax.set_yticklabels(corr.columns)
-        plt.colorbar(im)
+        ax.bar(aqi_pct.index, aqi_pct.values)
+        ax.set_ylabel("Percentage (%)")
+        ax.set_title("AQI Category Distribution (%)")
         st.pyplot(fig)
 
-    with st.expander("🔬 Pollutant vs PM2.5"):
-        pollutant = st.selectbox(
-            "Select Pollutant",
-            ["PM10", "SO2", "NO2", "CO", "O3", "NH3"]
-        )
-
+    with st.expander("📉 PM2.5 vs PM10 Relationship"):
         fig, ax = plt.subplots()
-        ax.scatter(filtered_df[pollutant], filtered_df["PM2.5"], alpha=0.5)
-        ax.set_xlabel(pollutant)
+        ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], alpha=0.5)
+        ax.set_xlabel("PM10")
         ax.set_ylabel("PM2.5")
+        st.pyplot(fig)
+
+    with st.expander("🧪 Average Pollutant Levels"):
+        pollutants = ["PM10", "SO2", "NO2", "CO", "O3", "NH3"]
+        avg_vals = filtered_df[pollutants].mean()
+        fig, ax = plt.subplots()
+        ax.bar(pollutants, avg_vals)
+        ax.set_ylabel("Average Concentration")
         st.pyplot(fig)
 
     with st.expander("📑 Dataset Statistics"):
         st.dataframe(filtered_df.describe())
 
 # ==================================================
-# 🗺 TAB 3 – MAP
+# TAB 3 – MAP
 # ==================================================
 with tab3:
     st.subheader("India Air Quality Map (Average PM2.5)")
-    st.caption("🟢 Good | 🟠 Moderate | 🔴 Poor")
 
     city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
     m = folium.Map(location=[22.5, 80.0], zoom_start=5)
@@ -263,5 +217,5 @@ with tab3:
 # FOOTER
 # --------------------------------------------------
 st.markdown("---")
-st.markdown("📘 Course: CMP7005 – Air Quality Analysis")
-st.markdown("☁ Deployed on Streamlit Cloud")
+st.markdown("📘 *Course:* CMP7005 – Air Quality Analysis")
+st.markdown("☁ *Deployed on Streamlit Cloud*")
