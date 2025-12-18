@@ -455,7 +455,7 @@ if page == "🏠 Home Dashboard":
     <div style="text-align: center; color: #666; padding: 20px;">
         <h3>🌍 Making Air Quality Data Accessible & Actionable</h3>
         <p>This dashboard is part of the CMP7005 academic project focused on environmental data analytics.</p>
-        <p>Developed with ❤️ using Python & Streamlit</p>
+        <p>Developed using Python & Streamlit</p>
     </div>
     """, unsafe_allow_html=True)
 
