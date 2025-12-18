@@ -1222,8 +1222,7 @@ with footer_col3:
     **☁ Deployment:**  
     Streamlit Cloud  
     
-    **📧 Contact:**  
-    Academic Project
+    
     """)
 
 # Add a simple back to top button
