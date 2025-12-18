@@ -68,7 +68,10 @@ DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
 
 @st.cache_data
 def load_data():
-    return pd.read_csv(DATA_PATH)
+    df = pd.read_csv(DATA_PATH)
+    # Clean data - remove NaN values in essential columns
+    df = df.dropna(subset=['PM2.5', 'PM10'], how='any')
+    return df
 
 df = load_data()
 
@@ -307,7 +310,7 @@ if page == "🔮 PM2.5 Prediction":
                     st.write(f"Input values: {[so2, no2, co, o3, pm10, nh3]}")
 
 # ==================================================
-# PAGE 2 – FILTERED EDA
+# PAGE 2 – FILTERED EDA (FIXED)
 # ==================================================
 elif page == "📊 EDA & Visualisation":
     st.subheader("Exploratory Data Analysis (Filter-Driven)")
@@ -349,89 +352,130 @@ elif page == "📊 EDA & Visualisation":
         filtered_df["AQI Category"].isin(aqi_filter)
     ]
 
+    # Clean filtered data - remove NaN values
+    filtered_df = filtered_df.dropna(subset=['PM2.5', 'PM10'], how='any')
+    
     st.markdown(f"**Showing {len(filtered_df)} records**")
-    st.dataframe(filtered_df.head(20))
-
-    # Statistics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Filtered Avg PM2.5", f"{filtered_df['PM2.5'].mean():.2f}")
-    with col2:
-        st.metric("Filtered Max PM2.5", f"{filtered_df['PM2.5'].max():.2f}")
-    with col3:
-        st.metric("Filtered Min PM2.5", f"{filtered_df['PM2.5'].min():.2f}")
-    with col4:
-        st.metric("Std Dev", f"{filtered_df['PM2.5'].std():.2f}")
-
-    st.subheader("AQI Category Distribution")
-    aqi_counts = filtered_df["AQI Category"].value_counts()
-    fig, ax = plt.subplots(figsize=(10, 6))
-    colors = ['#00E400', '#FFFF00', '#FF7E00', '#FF0000', '#8F3F97', '#7E0023']
-    ax.bar(aqi_counts.index, aqi_counts.values, color=colors[:len(aqi_counts)])
-    ax.set_ylabel('Count')
-    ax.set_title('AQI Category Distribution')
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
-
-    st.subheader("PM2.5 Distribution")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(filtered_df["PM2.5"], bins=30, edgecolor='black', alpha=0.7)
-    ax.axvline(filtered_df["PM2.5"].mean(), color='red', linestyle='--', label=f'Mean: {filtered_df["PM2.5"].mean():.2f}')
-    ax.set_xlabel('PM2.5 (µg/m³)')
-    ax.set_ylabel('Frequency')
-    ax.set_title('PM2.5 Distribution Histogram')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
-
-    st.subheader("PM2.5 vs PM10 Scatter Plot")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    scatter = ax.scatter(filtered_df["PM10"], filtered_df["PM2.5"], 
-                        alpha=0.6, c=filtered_df["PM2.5"], cmap='viridis')
-    ax.set_xlabel('PM10 (µg/m³)')
-    ax.set_ylabel('PM2.5 (µg/m³)')
-    ax.set_title('PM2.5 vs PM10 Correlation')
     
-    # Add correlation line if there's data
-    if len(filtered_df) > 1:
-        z = np.polyfit(filtered_df["PM10"], filtered_df["PM2.5"], 1)
-        p = np.poly1d(z)
-        ax.plot(filtered_df["PM10"], p(filtered_df["PM10"]), "r--", alpha=0.8)
-        
-        # Calculate correlation
-        correlation = filtered_df["PM10"].corr(filtered_df["PM2.5"])
-        ax.text(0.05, 0.95, f'Correlation: {correlation:.3f}', 
-                transform=ax.transAxes, fontsize=12,
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    
-    plt.colorbar(scatter, label='PM2.5 (µg/m³)')
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
+    if len(filtered_df) > 0:
+        st.dataframe(filtered_df.head(20))
 
-    # Time series if date column exists
-    date_columns = ['Date', 'date', 'timestamp']
-    date_col = None
-    for col in date_columns:
-        if col in filtered_df.columns:
-            date_col = col
-            break
-    
-    if date_col:
-        try:
-            filtered_df[date_col] = pd.to_datetime(filtered_df[date_col])
-            filtered_df = filtered_df.sort_values(date_col)
-            
-            st.subheader("PM2.5 Time Series")
-            fig, ax = plt.subplots(figsize=(12, 6))
-            ax.plot(filtered_df[date_col], filtered_df['PM2.5'], marker='o', markersize=3, linewidth=1)
-            ax.set_xlabel('Date')
-            ax.set_ylabel('PM2.5 (µg/m³)')
-            ax.set_title('PM2.5 Over Time')
-            ax.grid(True, alpha=0.3)
+        # Statistics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Filtered Avg PM2.5", f"{filtered_df['PM2.5'].mean():.2f}")
+        with col2:
+            st.metric("Filtered Max PM2.5", f"{filtered_df['PM2.5'].max():.2f}")
+        with col3:
+            st.metric("Filtered Min PM2.5", f"{filtered_df['PM2.5'].min():.2f}")
+        with col4:
+            st.metric("Std Dev", f"{filtered_df['PM2.5'].std():.2f}")
+
+        st.subheader("AQI Category Distribution")
+        aqi_counts = filtered_df["AQI Category"].value_counts()
+        if len(aqi_counts) > 0:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = ['#00E400', '#FFFF00', '#FF7E00', '#FF0000', '#8F3F97', '#7E0023']
+            ax.bar(aqi_counts.index, aqi_counts.values, color=colors[:len(aqi_counts)])
+            ax.set_ylabel('Count')
+            ax.set_title('AQI Category Distribution')
             plt.xticks(rotation=45)
             st.pyplot(fig)
-        except:
-            pass
+        else:
+            st.warning("No data available for selected AQI categories.")
+
+        st.subheader("PM2.5 Distribution")
+        if len(filtered_df) > 0:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.hist(filtered_df["PM2.5"], bins=min(30, len(filtered_df)), edgecolor='black', alpha=0.7)
+            ax.axvline(filtered_df["PM2.5"].mean(), color='red', linestyle='--', label=f'Mean: {filtered_df["PM2.5"].mean():.2f}')
+            ax.set_xlabel('PM2.5 (µg/m³)')
+            ax.set_ylabel('Frequency')
+            ax.set_title('PM2.5 Distribution Histogram')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            st.pyplot(fig)
+        else:
+            st.warning("Insufficient data for histogram.")
+
+        st.subheader("PM2.5 vs PM10 Scatter Plot")
+        if len(filtered_df) > 1:
+            # Ensure we have valid numeric data
+            valid_data = filtered_df[['PM10', 'PM2.5']].dropna()
+            
+            if len(valid_data) >= 2:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                scatter = ax.scatter(valid_data["PM10"], valid_data["PM2.5"], 
+                                    alpha=0.6, c=valid_data["PM2.5"], cmap='viridis')
+                ax.set_xlabel('PM10 (µg/m³)')
+                ax.set_ylabel('PM2.5 (µg/m³)')
+                ax.set_title('PM2.5 vs PM10 Correlation')
+                
+                try:
+                    # Add correlation line with error handling
+                    if len(valid_data) >= 2:
+                        # Check if data is not constant (variance > 0)
+                        if valid_data["PM10"].std() > 0 and valid_data["PM2.5"].std() > 0:
+                            z = np.polyfit(valid_data["PM10"], valid_data["PM2.5"], 1)
+                            p = np.poly1d(z)
+                            ax.plot(valid_data["PM10"], p(valid_data["PM10"]), "r--", alpha=0.8)
+                            
+                            # Calculate correlation
+                            correlation = valid_data["PM10"].corr(valid_data["PM2.5"])
+                            ax.text(0.05, 0.95, f'Correlation: {correlation:.3f}', 
+                                    transform=ax.transAxes, fontsize=12,
+                                    verticalalignment='top', 
+                                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                        else:
+                            ax.text(0.05, 0.95, 'Insufficient variance for correlation line', 
+                                    transform=ax.transAxes, fontsize=12,
+                                    verticalalignment='top', 
+                                    bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.5))
+                except Exception as e:
+                    # If polyfit fails, just show scatter plot without regression line
+                    ax.text(0.05, 0.95, 'Could not compute correlation line', 
+                            transform=ax.transAxes, fontsize=12,
+                            verticalalignment='top', 
+                            bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.5))
+                
+                plt.colorbar(scatter, label='PM2.5 (µg/m³)')
+                ax.grid(True, alpha=0.3)
+                st.pyplot(fig)
+            else:
+                st.warning("Need at least 2 valid data points for scatter plot.")
+        else:
+            st.warning("Need at least 2 data points for scatter plot.")
+
+        # Time series if date column exists
+        date_columns = ['Date', 'date', 'timestamp', 'time', 'Time']
+        date_col = None
+        for col in date_columns:
+            if col in filtered_df.columns:
+                date_col = col
+                break
+        
+        if date_col and len(filtered_df) > 1:
+            try:
+                filtered_df_copy = filtered_df.copy()
+                filtered_df_copy[date_col] = pd.to_datetime(filtered_df_copy[date_col], errors='coerce')
+                filtered_df_copy = filtered_df_copy.dropna(subset=[date_col])
+                filtered_df_copy = filtered_df_copy.sort_values(date_col)
+                
+                if len(filtered_df_copy) > 0:
+                    st.subheader("PM2.5 Time Series")
+                    fig, ax = plt.subplots(figsize=(12, 6))
+                    ax.plot(filtered_df_copy[date_col], filtered_df_copy['PM2.5'], 
+                           marker='o', markersize=3, linewidth=1)
+                    ax.set_xlabel('Date')
+                    ax.set_ylabel('PM2.5 (µg/m³)')
+                    ax.set_title('PM2.5 Over Time')
+                    ax.grid(True, alpha=0.3)
+                    plt.xticks(rotation=45)
+                    st.pyplot(fig)
+            except:
+                st.info("Could not create time series plot. Date format may be incompatible.")
+    else:
+        st.warning("⚠️ No data matches the selected filters. Please adjust your filter criteria.")
 
 # ==================================================
 # PAGE 3 – INDIA MAP
@@ -532,7 +576,7 @@ elif page == "🗺 India AQ Map":
             <span>Poor (91-120)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: purple; margin-right: 5px; border-radius: 50%;"></div>
+            <div style="width: 15px; height=15px; background-color: purple; margin-right: 5px; border-radius: 50%;"></div>
             <span>Very Poor (121-250)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
@@ -559,129 +603,135 @@ elif page == "🏙 City AQ Map":
     # Filter data for selected city
     city_df = df[df["City"] == city]
     
-    # Calculate statistics
-    avg_pm = city_df["PM2.5"].mean()
-    max_pm = city_df["PM2.5"].max()
-    min_pm = city_df["PM2.5"].min()
-    category = aqi_category(avg_pm)
+    # Clean data
+    city_df = city_df.dropna(subset=['PM2.5'])
     
-    # Display city statistics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Average PM2.5", f"{avg_pm:.2f} µg/m³")
-    with col2:
-        st.metric("Maximum PM2.5", f"{max_pm:.2f} µg/m³")
-    with col3:
-        st.metric("Minimum PM2.5", f"{min_pm:.2f} µg/m³")
-    with col4:
-        st.metric("AQI Category", category)
-    
-    # Get city coordinates
-    lat, lon = CITY_COORDS.get(city, [22.5, 80.0])
-    
-    # Create city map
-    city_map = folium.Map(location=[lat, lon], zoom_start=12, tiles='CartoDB positron')
-    
-    # Color coding based on AQI
-    color_map = {
-        "Good": "green",
-        "Satisfactory": "lightgreen",
-        "Moderate": "orange",
-        "Poor": "red",
-        "Very Poor": "purple",
-        "Severe": "darkred"
-    }
-    color = color_map.get(category, "gray")
-    
-    # Add main city marker
-    popup_html = f"""
-    <div style="font-family: Arial; padding: 10px; min-width: 200px;">
-        <h3 style="margin-bottom: 5px;">{city}</h3>
-        <hr style="margin: 5px 0;">
-        <b>Average PM2.5:</b> {avg_pm:.2f} µg/m³<br>
-        <b>AQI Category:</b> {category}<br>
-        <b>Data Points:</b> {len(city_df)}<br>
-        <b>Range:</b> {min_pm:.1f} - {max_pm:.1f} µg/m³
-    </div>
-    """
-    
-    folium.CircleMarker(
-        location=[lat, lon],
-        radius=20,
-        popup=folium.Popup(popup_html, max_width=300),
-        tooltip=f"{city}: Average PM2.5 = {avg_pm:.2f} µg/m³",
-        color=color,
-        fill=True,
-        fill_color=color,
-        fill_opacity=0.8,
-        weight=3
-    ).add_to(city_map)
-    
-    # If there are multiple data points with coordinates, add them
-    coord_cols = ['lat', 'latitude', 'Latitude', 'LAT']
-    lat_col = None
-    lon_col = None
-    
-    for col in coord_cols:
-        if col in city_df.columns:
-            lat_col = col
-            break
-    
-    lon_options = ['lon', 'longitude', 'Longitude', 'LON', 'lng']
-    for col in lon_options:
-        if col in city_df.columns:
-            lon_col = col
-            break
-    
-    if lat_col and lon_col and not city_df[lat_col].isnull().all():
-        # Add individual data points
-        for _, row in city_df.iterrows():
-            if pd.notnull(row[lat_col]) and pd.notnull(row[lon_col]):
-                point_color = "blue"
-                folium.CircleMarker(
-                    location=[row[lat_col], row[lon_col]],
-                    radius=5,
-                    tooltip=f"PM2.5: {row['PM2.5']:.1f} µg/m³",
-                    color=point_color,
-                    fill=True,
-                    fill_color=point_color,
-                    fill_opacity=0.6,
-                    weight=1
-                ).add_to(city_map)
-    
-    # Add legend
-    legend_html = f'''
-    <div style="position: fixed; 
-                bottom: 50px; left: 50px; width: 220px; height: auto; 
-                background-color: white; border:2px solid grey; z-index:9999; 
-                font-size:14px; padding: 10px; border-radius: 5px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.2);">
-        <b>{city} Air Quality</b><br>
-        <div style="margin-top: 10px;">
-            <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 20px; background-color: {color}; margin-right: 10px; border-radius: 50%; border: 2px solid black;"></div>
-                <div>
-                    <b>Average PM2.5:</b> {avg_pm:.2f} µg/m³<br>
-                    <b>Category:</b> {category}
+    if len(city_df) > 0:
+        # Calculate statistics
+        avg_pm = city_df["PM2.5"].mean()
+        max_pm = city_df["PM2.5"].max()
+        min_pm = city_df["PM2.5"].min()
+        category = aqi_category(avg_pm)
+        
+        # Display city statistics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Average PM2.5", f"{avg_pm:.2f} µg/m³")
+        with col2:
+            st.metric("Maximum PM2.5", f"{max_pm:.2f} µg/m³")
+        with col3:
+            st.metric("Minimum PM2.5", f"{min_pm:.2f} µg/m³")
+        with col4:
+            st.metric("AQI Category", category)
+        
+        # Get city coordinates
+        lat, lon = CITY_COORDS.get(city, [22.5, 80.0])
+        
+        # Create city map
+        city_map = folium.Map(location=[lat, lon], zoom_start=12, tiles='CartoDB positron')
+        
+        # Color coding based on AQI
+        color_map = {
+            "Good": "green",
+            "Satisfactory": "lightgreen",
+            "Moderate": "orange",
+            "Poor": "red",
+            "Very Poor": "purple",
+            "Severe": "darkred"
+        }
+        color = color_map.get(category, "gray")
+        
+        # Add main city marker
+        popup_html = f"""
+        <div style="font-family: Arial; padding: 10px; min-width: 200px;">
+            <h3 style="margin-bottom: 5px;">{city}</h3>
+            <hr style="margin: 5px 0;">
+            <b>Average PM2.5:</b> {avg_pm:.2f} µg/m³<br>
+            <b>AQI Category:</b> {category}<br>
+            <b>Data Points:</b> {len(city_df)}<br>
+            <b>Range:</b> {min_pm:.1f} - {max_pm:.1f} µg/m³
+        </div>
+        """
+        
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=20,
+            popup=folium.Popup(popup_html, max_width=300),
+            tooltip=f"{city}: Average PM2.5 = {avg_pm:.2f} µg/m³",
+            color=color,
+            fill=True,
+            fill_color=color,
+            fill_opacity=0.8,
+            weight=3
+        ).add_to(city_map)
+        
+        # If there are multiple data points with coordinates, add them
+        coord_cols = ['lat', 'latitude', 'Latitude', 'LAT']
+        lat_col = None
+        lon_col = None
+        
+        for col in coord_cols:
+            if col in city_df.columns:
+                lat_col = col
+                break
+        
+        lon_options = ['lon', 'longitude', 'Longitude', 'LON', 'lng']
+        for col in lon_options:
+            if col in city_df.columns:
+                lon_col = col
+                break
+        
+        if lat_col and lon_col and not city_df[lat_col].isnull().all():
+            # Add individual data points
+            for _, row in city_df.iterrows():
+                if pd.notnull(row[lat_col]) and pd.notnull(row[lon_col]):
+                    point_color = "blue"
+                    folium.CircleMarker(
+                        location=[row[lat_col], row[lon_col]],
+                        radius=5,
+                        tooltip=f"PM2.5: {row['PM2.5']:.1f} µg/m³",
+                        color=point_color,
+                        fill=True,
+                        fill_color=point_color,
+                        fill_opacity=0.6,
+                        weight=1
+                    ).add_to(city_map)
+        
+        # Add legend
+        legend_html = f'''
+        <div style="position: fixed; 
+                    bottom: 50px; left: 50px; width: 220px; height: auto; 
+                    background-color: white; border:2px solid grey; z-index:9999; 
+                    font-size:14px; padding: 10px; border-radius: 5px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.2);">
+            <b>{city} Air Quality</b><br>
+            <div style="margin-top: 10px;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background-color: {color}; margin-right: 10px; border-radius: 50%; border: 2px solid black;"></div>
+                    <div>
+                        <b>Average PM2.5:</b> {avg_pm:.2f} µg/m³<br>
+                        <b>Category:</b> {category}
+                    </div>
                 </div>
             </div>
+            <hr style="margin: 10px 0;">
+            <div style="display: flex; align-items: center;">
+                <div style="width: 10px; height: 10px; background-color: blue; margin-right: 10px; border-radius: 50%;"></div>
+                <span>Individual measurements</span>
+            </div>
         </div>
-        <hr style="margin: 10px 0;">
-        <div style="display: flex; align-items: center;">
-            <div style="width: 10px; height: 10px; background-color: blue; margin-right: 10px; border-radius: 50%;"></div>
-            <span>Individual measurements</span>
-        </div>
-    </div>
-    '''
-    
-    city_map.get_root().html.add_child(folium.Element(legend_html))
-    
-    # Display the map
-    st_folium(city_map, width=900, height=600, returned_objects=[])
-    
-    # Show city data table
-    with st.expander(f"📋 View {city} Data"):
-        st.dataframe(city_df.head(50))
+        '''
+        
+        city_map.get_root().html.add_child(folium.Element(legend_html))
+        
+        # Display the map
+        st_folium(city_map, width=900, height=600, returned_objects=[])
+        
+        # Show city data table
+        with st.expander(f"📋 View {city} Data"):
+            st.dataframe(city_df.head(50))
+    else:
+        st.warning(f"No data available for {city}")
 
 # --------------------------------------------------
 # FOOTER
