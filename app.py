@@ -1029,7 +1029,6 @@ elif page == "🗺 India AQ Map":
         <small>Marker size indicates pollution level</small>
     </div>
     '''
-    '''
     
     india_map.get_root().html.add_child(folium.Element(legend_html))
     
