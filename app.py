@@ -33,7 +33,7 @@ CITY_COORDS = {
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title="Air Quality Analysis – CMP7005",
+    page_title="Air Quality Analysis – Data analytics and Visualisation",
     layout="wide",
     page_icon="🌫"
 )
@@ -55,14 +55,14 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📚 CMP7005 – Air Quality Analysis")
+st.sidebar.markdown("### 📚 Data analytics and Visualisation – Air Quality Analysis")
 
 # Add project info in sidebar
 with st.sidebar.expander("ℹ️ Project Info"):
     st.markdown("""
     **Academic Project**
     
-    **Course:** CMP7005 - Data analytics and Visualisation
+    **Course:** Data analytics and Visualisation
     
     **Objective:** 
     - Analyze air quality data across Indian cities
@@ -155,7 +155,7 @@ if page == "🏠 Home Dashboard":
     
     with col1:
         st.title("🌫 Air Quality Analysis & Prediction Dashboard")
-        st.markdown("### CMP7005 - Advanced Data Analytics Project")
+        st.markdown("### Data analytics and Visualisation - Advanced Data Analytics Project")
     
     with col2:
         st.markdown("")
@@ -454,7 +454,7 @@ if page == "🏠 Home Dashboard":
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 20px;">
         <h3>🌍 Making Air Quality Data Accessible & Actionable</h3>
-        <p>This dashboard is part of the CMP7005 academic project focused on environmental data analytics.</p>
+        <p>This dashboard is part of the Data analytics and Visualisation academic project focused on environmental data analytics.</p>
         <p>Developed using Python & Streamlit</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1203,7 +1203,7 @@ footer_col1, footer_col2, footer_col3 = st.columns([2, 1, 1])
 
 with footer_col1:
     st.markdown("""
-    **📘 Course:** CMP7005 – Air Quality Analysis & Prediction  
+    **📘 Course:** Data analytics and Visualisation – Air Quality Analysis & Prediction  
     **🎓 Academic Project** – Advanced Data Analytics  
     **🌍** Making environmental data accessible and actionable
     """)
