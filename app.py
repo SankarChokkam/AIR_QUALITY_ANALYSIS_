@@ -915,18 +915,18 @@ elif page == "🗺 India AQ Map":
     city_pm = df.groupby("City")["PM2.5"].mean().reset_index()
     city_pm = city_pm.sort_values("PM2.5", ascending=False)
     
-    # Summary statistics
+        # Summary statistics
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("### 🏆 Most Polluted Cities")
         top_cities = city_pm.head(5)
-        for i, row in top_cities.iterrows():
+        for idx, (_, row) in enumerate(top_cities.iterrows(), 1):
             category = aqi_category(row["PM2.5"])
             color = get_aqi_color(category)
             st.markdown(f"""
             <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #f8f9fa;">
-                <b>{i+1}. {row['City']}</b><br>
+                <b>{idx}. {row['City']}</b><br>
                 <span style="color: #666;">{row['PM2.5']:.1f} µg/m³ • {category}</span>
             </div>
             """, unsafe_allow_html=True)
@@ -934,17 +934,15 @@ elif page == "🗺 India AQ Map":
     with col2:
         st.markdown("### 🌿 Least Polluted Cities")
         bottom_cities = city_pm.tail(5).iloc[::-1]
-        for i, row in bottom_cities.iterrows():
+        for idx, (_, row) in enumerate(bottom_cities.iterrows(), 1):
             category = aqi_category(row["PM2.5"])
             color = get_aqi_color(category)
             st.markdown(f"""
             <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #f8f9fa;">
-                <b>{i+1}. {row['City']}</b><br>
+                <b>{idx}. {row['City']}</b><br>
                 <span style="color: #666;">{row['PM2.5']:.1f} µg/m³ • {category}</span>
             </div>
             """, unsafe_allow_html=True)
-    
-    st.markdown("---")
     
     # Create the map
     st.markdown("### 📍 Interactive Map")
