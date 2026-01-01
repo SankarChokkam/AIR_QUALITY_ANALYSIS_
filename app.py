@@ -1003,27 +1003,27 @@ elif page == "🗺 India AQ Map":
         <b>AQI Categories</b><br>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #00E400; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Good #00E400 (≤30 µg/m³)</span>
+            <span>Good (≤30 µg/m³)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #FFFF00; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Satisfactory #FFFF00 (31-60)</span>
+            <span>Satisfactory (31-60)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #FF7E00; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Moderate #FF7E00 (61-90)</span>
+            <span>Moderate (61-90)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #FF0000; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Poor #FF0000 (91-120)</span>
+            <span>Poor (91-120)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #8F3F97; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Very Poor #8F3F97 (121-250)</span>
+            <span>Very Poor (121-250)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
             <div style="width: 15px; height: 15px; background-color: #7E0023; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Severe #7E0023 (>250)</span>
+            <span>Severe  (>250)</span>
         </div>
         <hr style="margin: 10px 0;">
         <small>Marker size indicates pollution level</small>
