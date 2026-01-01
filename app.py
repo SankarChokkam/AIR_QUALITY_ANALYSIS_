@@ -925,7 +925,7 @@ elif page == "🗺 India AQ Map":
             category = aqi_category(row["PM2.5"])
             color = get_aqi_color(category)
             st.markdown(f"""
-            <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #f8f9fa;">
+            <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #000000;">
                 <b>{idx}. {row['City']}</b><br>
                 <span style="color: #666;">{row['PM2.5']:.1f} µg/m³ • {category}</span>
             </div>
@@ -938,7 +938,7 @@ elif page == "🗺 India AQ Map":
             category = aqi_category(row["PM2.5"])
             color = get_aqi_color(category)
             st.markdown(f"""
-            <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #f8f9fa;">
+            <div style="padding: 8px; margin: 5px 0; border-left: 4px solid {color}; background-color: #000000;">
                 <b>{idx}. {row['City']}</b><br>
                 <span style="color: #666;">{row['PM2.5']:.1f} µg/m³ • {category}</span>
             </div>
