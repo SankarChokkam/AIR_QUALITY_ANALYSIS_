@@ -7,6 +7,9 @@ import streamlit as st
 import folium
 import matplotlib.pyplot as plt
 from streamlit_folium import st_folium
+st.cache_data.clear()
+st.cache_resource.clear()
+
 
 # --------------------------------------------------
 # BASE DIRECTORY
