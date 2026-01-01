@@ -62,7 +62,7 @@ with st.sidebar.expander("ℹ️ Project Info"):
     st.markdown("""
     **Academic Project**
     
-    **Course:** CMP7005 - Advanced Data Analytics
+    **Course:** CMP7005 - Data analytics and Visualisation
     
     **Objective:** 
     - Analyze air quality data across Indian cities
