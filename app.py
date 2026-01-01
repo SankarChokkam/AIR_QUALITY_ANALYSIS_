@@ -993,7 +993,7 @@ elif page == "🗺 India AQ Map":
                 weight=2
             ).add_to(india_map)
     
-    # Add legend with color codes
+       # Add legend with color codes
     legend_html = '''
     <div style="position: fixed; 
                 bottom: 50px; left: 50px; width: 220px; height: 260px; 
@@ -1029,7 +1029,6 @@ elif page == "🗺 India AQ Map":
         <small>Marker size indicates pollution level</small>
     </div>
     '''
-    
     india_map.get_root().html.add_child(folium.Element(legend_html))
     
     # Display the map
