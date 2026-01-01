@@ -55,7 +55,7 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📚 CMP7005 – Air Quality Analysis")
+st.sidebar.markdown("### 📚 CMP7005 – Data analytics and Visualisation ")
 
 # Add project info in sidebar
 with st.sidebar.expander("ℹ️ Project Info"):
