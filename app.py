@@ -38,7 +38,7 @@ CITY_COORDS = {
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title="Air Quality Analysis – CMP7005",
+    page_title="Data Analytics and Visualisation – CMP7005",
     layout="wide",
     page_icon="🌫"
 )
