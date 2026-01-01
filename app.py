@@ -972,7 +972,7 @@ elif page == "🗺 India AQ Map":
             
             # Create popup content
             popup_html = f"""
-            <div style="font-family: Arial; padding: 10px; min-width: 200px;">
+            <div style="font-family: Arial; padding: 10px; min-width: 200px;  background-color: #000000;">
                 <h4 style="margin-bottom: 5px; color: {color};">{city_name}</h4>
                 <hr style="margin: 5px 0;">
                 <b>PM2.5:</b> {pm_value:.1f} µg/m³<br>
