@@ -997,7 +997,7 @@ elif page == "🗺 India AQ Map":
     legend_html = '''
     <div style="position: fixed; 
                 bottom: 50px; left: 50px; width: 220px; height: 260px; 
-                background-color: white; border:2px solid grey; z-index:9999; 
+                background-color: black; border:2px solid grey; z-index:9999; 
                 font-size:14px; padding: 10px; border-radius: 5px;
                 box-shadow: 0 0 10px rgba(0,0,0,0.2);">
         <b>AQI Categories</b><br>
