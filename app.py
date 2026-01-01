@@ -993,41 +993,42 @@ elif page == "🗺 India AQ Map":
                 weight=2
             ).add_to(india_map)
     
-    # Add legend
+    # Add legend with color codes
     legend_html = '''
     <div style="position: fixed; 
-                bottom: 50px; left: 50px; width: 200px; height: 240px; 
+                bottom: 50px; left: 50px; width: 220px; height: 260px; 
                 background-color: white; border:2px solid grey; z-index:9999; 
                 font-size:14px; padding: 10px; border-radius: 5px;
                 box-shadow: 0 0 10px rgba(0,0,0,0.2);">
         <b>AQI Categories</b><br>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: green; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Good (≤30 µg/m³)</span>
+            <div style="width: 15px; height: 15px; background-color: #00E400; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Good #00E400 (≤30 µg/m³)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: lightgreen; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Satisfactory (31-60)</span>
+            <div style="width: 15px; height: 15px; background-color: #FFFF00; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Satisfactory #FFFF00 (31-60)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: orange; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Moderate (61-90)</span>
+            <div style="width: 15px; height: 15px; background-color: #FF7E00; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Moderate #FF7E00 (61-90)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: red; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Poor (91-120)</span>
+            <div style="width: 15px; height: 15px; background-color: #FF0000; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Poor #FF0000 (91-120)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: purple; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Very Poor (121-250)</span>
+            <div style="width: 15px; height: 15px; background-color: #8F3F97; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Very Poor #8F3F97 (121-250)</span>
         </div>
         <div style="display: flex; align-items: center; margin-top: 5px;">
-            <div style="width: 15px; height: 15px; background-color: darkred; margin-right: 5px; border-radius: 50%;"></div>
-            <span>Severe (>250)</span>
+            <div style="width: 15px; height: 15px; background-color: #7E0023; margin-right: 5px; border-radius: 50%;"></div>
+            <span>Severe #7E0023 (>250)</span>
         </div>
         <hr style="margin: 10px 0;">
         <small>Marker size indicates pollution level</small>
     </div>
+    '''
     '''
     
     india_map.get_root().html.add_child(folium.Element(legend_html))
