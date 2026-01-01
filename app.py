@@ -155,7 +155,7 @@ if page == "🏠 Home Dashboard":
     
     with col1:
         st.title("🌫 Air Quality Analysis & Prediction Dashboard")
-        st.markdown("### CMP7005 - Advanced Data Analytics Project")
+        st.markdown("### CMP7005 - Data analytics and Visualisation Project")
     
     with col2:
         st.markdown("")
@@ -1202,7 +1202,7 @@ footer_col1, footer_col2, footer_col3 = st.columns([2, 1, 1])
 
 with footer_col1:
     st.markdown("""
-    **📘 Course:** CMP7005 – Air Quality Analysis & Prediction  
+    **📘 Course:** CMP7005 – Data analytics and Visualisation  
     **🎓 Academic Project** – Advanced Data Analytics  
     **🌍** Making environmental data accessible and actionable
     """)
