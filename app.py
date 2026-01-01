@@ -392,36 +392,35 @@ if page == "🏠 Home Dashboard":
         st.metric("📈 Data Completeness", f"{completeness:.1f}%")
     
     with quality_col2:
-        # Time range info
-        date_cols = ['Date', 'date', 'timestamp', 'time', 'Time']
-        date_col = None
-        for col in date_cols:
-            if col in df.columns:
-                date_col = col
-                break
-        
-        if date_col:
-            try:
-                df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
-                date_range = df[date_col].dropna()
-                if len(date_range) > 0:
-                    min_date = date_range.min().strftime('%Y-%m-%d')
-                    max_date = date_range.max().strftime('%Y-%m-%d')
-                    st.metric("📅 Time Range", f"{min_date} to {max_date}")
-                else:
-                    st.metric("📅 Time Range", "Not available")
-            except:
-                st.metric("📅 Time Range", "Not available")
-        else:
-            st.metric("📅 Time Range", "Not available")
-    
-    with quality_col3:
-        # Parameter coverage
-        parameters = ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3', 'NH3']
-        available_params = [p for p in parameters if p in df.columns]
-        st.metric("🔧 Parameters", f"{len(available_params)}/7")
-    
-    st.markdown("---")
+      # -----------------------------
+# TIME RANGE (ROBUST VERSION)
+# -----------------------------
+date_cols = ['Date', 'date', 'timestamp', 'time', 'Time']
+date_col = next((col for col in date_cols if col in df.columns), None)
+
+if date_col:
+    # Work on a COPY to avoid side effects
+    dates = pd.to_datetime(
+        df[date_col].astype(str).str.strip(),
+        errors='coerce',
+        infer_datetime_format=True
+    )
+
+    valid_dates = dates.dropna()
+
+    if not valid_dates.empty:
+        min_date = valid_dates.min()
+        max_date = valid_dates.max()
+
+        st.metric(
+            "📅 Time Range",
+            f"{min_date:%Y-%m-%d %H:%M}  →  {max_date:%Y-%m-%d %H:%M}"
+        )
+    else:
+        st.metric("📅 Time Range", "Not available")
+else:
+    st.metric("📅 Time Range", "Not available")
+
     
     # Quick Access Buttons
     st.markdown("## 🚀 Quick Access")
