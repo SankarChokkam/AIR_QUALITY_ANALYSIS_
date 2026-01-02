@@ -1219,8 +1219,10 @@ footer_col1, footer_col2, footer_col3 = st.columns([2, 1, 1])
 
 with footer_col1:
     st.markdown(f"""
-    **📘 Course:** {COURSE_NAME} – CMP7005 
-    **🎓 Academic Project** – Air Quality Analysis & Prediction 
+    **📘 Course:** {COURSE_NAME} – CMP7005
+    
+    **🎓 Academic Project** – Air Quality Analysis & Prediction
+    
     **🌍** Making environmental data accessible and actionable
     """)
 
