@@ -77,7 +77,7 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"### 📚 {COURSE_NAME} – Air Quality Analysis")
+st.sidebar.markdown(f"### 📚 {COURSE_NAME} ")
 
 # Add project info in sidebar
 with st.sidebar.expander("ℹ️ Project Info"):
@@ -176,7 +176,7 @@ if page == "🏠 Home Dashboard":
     
     with col1:
         st.title("🌫 Air Quality Analysis & Prediction Dashboard")
-        st.markdown(f"### {COURSE_NAME} - Advanced Data Analytics Project")
+        st.markdown(f"### {COURSE_NAME} - Air Quality Analysis Project")
     
     with col2:
         st.markdown("")
@@ -1220,7 +1220,7 @@ footer_col1, footer_col2, footer_col3 = st.columns([2, 1, 1])
 with footer_col1:
     st.markdown(f"""
     **📘 Course:** {COURSE_NAME} – Air Quality Analysis & Prediction  
-    **🎓 Academic Project** – Advanced Data Analytics  
+    **🎓 Academic Project** – Air Quality Analysis  
     **🌍** Making environmental data accessible and actionable
     """)
 
