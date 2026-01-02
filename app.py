@@ -55,7 +55,7 @@ CITY_COORDS = {
 # PAGE CONFIG
 # --------------------------------------------------
 st.set_page_config(
-    page_title=f"Air Quality Analysis – {COURSE_NAME}",
+    page_title=f"Air Quality Analysis & Prediction – {COURSE_NAME}",
     layout="wide",
     page_icon="🌫"
 )
@@ -176,7 +176,7 @@ if page == "🏠 Home Dashboard":
     
     with col1:
         st.title("🌫 Air Quality Analysis & Prediction Dashboard")
-        st.markdown(f"### {COURSE_NAME} - Air Quality Analysis Project")
+        st.markdown(f"### {COURSE_NAME} - Air Quality Analysis & Prediction Project")
     
     with col2:
         st.markdown("")
@@ -1219,8 +1219,8 @@ footer_col1, footer_col2, footer_col3 = st.columns([2, 1, 1])
 
 with footer_col1:
     st.markdown(f"""
-    **📘 Course:** {COURSE_NAME} – Air Quality Analysis & Prediction  
-    **🎓 Academic Project** – Air Quality Analysis  
+    **📘 Course:** {COURSE_NAME} – CMP7005 
+    **🎓 Academic Project** – Air Quality Analysis & Prediction 
     **🌍** Making environmental data accessible and actionable
     """)
 
