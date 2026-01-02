@@ -14,19 +14,35 @@ from streamlit_folium import st_folium
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --------------------------------------------------
-# CITY COORDINATES
+# CITY COORDINATES (UPDATED: ALL 26 CITIES)
 # --------------------------------------------------
 CITY_COORDS = {
-    "Delhi": [28.6139, 77.2090],
-    "Mumbai": [19.0760, 72.8777],
-    "Kolkata": [22.5726, 88.3639],
-    "Chennai": [13.0827, 80.2707],
-    "Bengaluru": [12.9716, 77.5946],
-    "Hyderabad": [17.3850, 78.4867],
-    "Pune": [18.5204, 73.8567],
     "Ahmedabad": [23.0225, 72.5714],
+    "Aizawl": [23.7271, 92.7176],
+    "Amaravati": [16.5131, 80.5165],
+    "Amritsar": [31.6340, 74.8723],
+    "Bengaluru": [12.9716, 77.5946],
+    "Bhopal": [23.2599, 77.4126],
+    "Brajrajnagar": [21.8216, 83.9241],
+    "Chandigarh": [30.7333, 76.7794],
+    "Chennai": [13.0827, 80.2707],
+    "Coimbatore": [11.0168, 76.9558],
+    "Delhi": [28.6139, 77.2090],
+    "Ernakulam": [9.9816, 76.2999],
+    "Gurugram": [28.4601, 77.0199],
+    "Guwahati": [26.1445, 91.7362],
+    "Hyderabad": [17.3850, 78.4867],
     "Jaipur": [26.9124, 75.7873],
-    "Lucknow": [26.8467, 80.9462]
+    "Jorapokhar": [23.7000, 86.4100],
+    "Kochi": [9.9312, 76.2673],
+    "Kolkata": [22.5726, 88.3639],
+    "Lucknow": [26.8467, 80.9462],
+    "Mumbai": [19.0760, 72.8777],
+    "Patna": [25.5941, 85.1376],
+    "Shillong": [25.5788, 91.8933],
+    "Talcher": [20.9500, 85.2167],
+    "Thiruvananthapuram": [8.5241, 76.9366],
+    "Visakhapatnam": [17.6868, 83.2185]
 }
 
 # --------------------------------------------------
@@ -64,37 +80,28 @@ with st.sidebar.expander("ℹ️ Project Info"):
     
     **Course:** Data analytics and Visualisation
     
-    **Objective:** 
-    - Analyze air quality data across Indian cities
+    **Objective:** - Analyze air quality data across Indian cities
     - Predict PM2.5 levels using ML
     - Visualize pollution patterns
     
-    **Dataset:** 
-    - Multi-city air quality measurements
+    **Dataset:** - Multi-city air quality measurements
     - Parameters: PM2.5, PM10, SO₂, NO₂, CO, O₃, NH₃
     """)
 
 # --------------------------------------------------
-# LOAD DATA (DO NOT DROP ROWS GLOBALLY)
+# LOAD DATA
 # --------------------------------------------------
 DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
 
 @st.cache_data
 def load_data():
-    """
-    Load the air quality dataset without removing rows.
-    Data cleaning must be done locally in visualizations,
-    not at the global load stage.
-    """
     df = pd.read_csv(DATA_PATH)
-
-    # Normalize city names (avoid hidden duplicates)
-    if "City" in df.columns:
-        df["City"] = df["City"].astype(str).str.strip()
-
+    # Clean data - Only drop if PM2.5 is missing. 
+    # We keep rows even if PM10 is missing (like in Lucknow) to preserve the city.
+    df = df.dropna(subset=['PM2.5']) 
     return df
 
-
+df = load_data()
 
 # --------------------------------------------------
 # LOAD MODEL
@@ -120,12 +127,10 @@ except Exception as e:
     model = None
 
 # --------------------------------------------------
-# AQI FUNCTION (MUST BE DEFINED BEFORE USE)
+# AQI FUNCTION
 # --------------------------------------------------
 def aqi_category(pm):
-    if pd.isna(pm):
-        return "Unknown"
-    elif pm <= 30:
+    if pm <= 30:
         return "Good"
     elif pm <= 60:
         return "Satisfactory"
@@ -137,7 +142,6 @@ def aqi_category(pm):
         return "Very Poor"
     else:
         return "Severe"
-
 
 # Apply AQI category to dataframe
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
@@ -217,7 +221,7 @@ if page == "🏠 Home Dashboard":
         - O₃ (Ozone)
         - NH₃ (Ammonia)
         
-        **Cities Covered:** 10 major Indian cities
+        **Cities Covered:** 26 major Indian cities
         
         **Time Period:** Multi-year measurements
         
@@ -716,7 +720,7 @@ elif page == "🔮 PM2.5 Prediction":
         """)
 
 # ==================================================
-# PAGE 3 – EDA & VISUALIZATION (Keep existing code)
+# PAGE 3 – EDA & VISUALIZATION
 # ==================================================
 elif page == "📊 EDA & Visualisation":
     # Title
@@ -763,8 +767,8 @@ elif page == "📊 EDA & Visualisation":
         filtered_df["AQI Category"].isin(aqi_filter)
     ]
 
-    # Clean filtered data - remove NaN values
-    filtered_df = filtered_df.dropna(subset=['PM2.5', 'PM10'], how='any')
+    # Clean filtered data - remove NaN values for visualizations
+    # Note: We check if PM10 exists before doing scatter plots
     
     st.markdown(f"**📊 Showing {len(filtered_df)} records**")
     
@@ -839,39 +843,37 @@ elif page == "📊 EDA & Visualisation":
         with viz_tab2:
             # Scatter Plot
             st.subheader("PM2.5 vs PM10 Scatter Plot")
-            if len(filtered_df) > 1:
-                valid_data = filtered_df[['PM10', 'PM2.5']].dropna()
+            # Only use rows where PM10 is not NaN
+            valid_data = filtered_df[['PM10', 'PM2.5']].dropna()
+            
+            if len(valid_data) > 1:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                scatter = ax.scatter(valid_data["PM10"], valid_data["PM2.5"], 
+                                    alpha=0.6, c=valid_data["PM2.5"], cmap='viridis')
+                ax.set_xlabel('PM10 (µg/m³)')
+                ax.set_ylabel('PM2.5 (µg/m³)')
+                ax.set_title('PM2.5 vs PM10 Correlation')
                 
-                if len(valid_data) >= 2:
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    scatter = ax.scatter(valid_data["PM10"], valid_data["PM2.5"], 
-                                        alpha=0.6, c=valid_data["PM2.5"], cmap='viridis')
-                    ax.set_xlabel('PM10 (µg/m³)')
-                    ax.set_ylabel('PM2.5 (µg/m³)')
-                    ax.set_title('PM2.5 vs PM10 Correlation')
-                    
-                    try:
-                        if len(valid_data) >= 2:
-                            if valid_data["PM10"].std() > 0 and valid_data["PM2.5"].std() > 0:
-                                z = np.polyfit(valid_data["PM10"], valid_data["PM2.5"], 1)
-                                p = np.poly1d(z)
-                                ax.plot(valid_data["PM10"], p(valid_data["PM10"]), "r--", alpha=0.8)
-                                
-                                correlation = valid_data["PM10"].corr(valid_data["PM2.5"])
-                                ax.text(0.05, 0.95, f'Correlation: {correlation:.3f}', 
-                                        transform=ax.transAxes, fontsize=12,
-                                        verticalalignment='top', 
-                                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-                    except:
-                        pass
-                    
-                    plt.colorbar(scatter, label='PM2.5 (µg/m³)')
-                    ax.grid(True, alpha=0.3)
-                    st.pyplot(fig)
-                else:
-                    st.warning("Need at least 2 valid data points for scatter plot.")
+                try:
+                    if len(valid_data) >= 2:
+                        if valid_data["PM10"].std() > 0 and valid_data["PM2.5"].std() > 0:
+                            z = np.polyfit(valid_data["PM10"], valid_data["PM2.5"], 1)
+                            p = np.poly1d(z)
+                            ax.plot(valid_data["PM10"], p(valid_data["PM10"]), "r--", alpha=0.8)
+                            
+                            correlation = valid_data["PM10"].corr(valid_data["PM2.5"])
+                            ax.text(0.05, 0.95, f'Correlation: {correlation:.3f}', 
+                                    transform=ax.transAxes, fontsize=12,
+                                    verticalalignment='top', 
+                                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                except:
+                    pass
+                
+                plt.colorbar(scatter, label='PM2.5 (µg/m³)')
+                ax.grid(True, alpha=0.3)
+                st.pyplot(fig)
             else:
-                st.warning("Need at least 2 data points for scatter plot.")
+                st.warning("Insufficient data with both PM2.5 and PM10 for scatter plot.")
         
         with viz_tab3:
             # Time series
@@ -916,7 +918,7 @@ elif page == "📊 EDA & Visualisation":
         st.warning("⚠️ No data matches the selected filters. Please adjust your filter criteria.")
 
 # ==================================================
-# PAGE 4 – INDIA MAP (Keep existing code)
+# PAGE 4 – INDIA MAP
 # ==================================================
 elif page == "🗺 India AQ Map":
     st.title("🗺 India Air Quality Map")
@@ -1046,7 +1048,7 @@ elif page == "🗺 India AQ Map":
     st_folium(india_map, width=1000, height=600, returned_objects=[])
 
 # ==================================================
-# PAGE 5 – CITY MAP (Keep existing code)
+# PAGE 5 – CITY MAP
 # ==================================================
 elif page == "🏙 City AQ Map":
     st.title("🏙 City-Specific Air Quality Analysis")
@@ -1218,8 +1220,7 @@ with footer_col1:
 
 with footer_col2:
     st.markdown("""
-    **🛠 Built with:**  
-    • Python 🐍  
+    **🛠 Built with:** • Python 🐍  
     • Streamlit ⚡  
     • Scikit-learn 🤖  
     • Folium 🗺
@@ -1227,8 +1228,7 @@ with footer_col2:
 
 with footer_col3:
     st.markdown("""
-    **☁ Deployment:**  
-    Streamlit Cloud  
+    **☁ Deployment:** Streamlit Cloud  
     
     
     """)
