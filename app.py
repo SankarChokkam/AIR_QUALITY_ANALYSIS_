@@ -120,10 +120,12 @@ except Exception as e:
     model = None
 
 # --------------------------------------------------
-# AQI FUNCTION
+# AQI FUNCTION (MUST BE DEFINED BEFORE USE)
 # --------------------------------------------------
 def aqi_category(pm):
-    if pm <= 30:
+    if pd.isna(pm):
+        return "Unknown"
+    elif pm <= 30:
         return "Good"
     elif pm <= 60:
         return "Satisfactory"
@@ -135,6 +137,7 @@ def aqi_category(pm):
         return "Very Poor"
     else:
         return "Severe"
+
 
 # Apply AQI category to dataframe
 df["AQI Category"] = df["PM2.5"].apply(aqi_category)
