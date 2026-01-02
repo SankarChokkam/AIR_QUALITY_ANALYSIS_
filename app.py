@@ -82,11 +82,8 @@ DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_PATH)
-    # Clean data - remove NaN values in essential columns
-    df = df.dropna(subset=['PM2.5', 'PM10'], how='any')
     return df
 
-df = load_data()
 
 # --------------------------------------------------
 # LOAD MODEL
