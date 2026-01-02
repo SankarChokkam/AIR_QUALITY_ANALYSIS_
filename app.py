@@ -75,14 +75,25 @@ with st.sidebar.expander("ℹ️ Project Info"):
     """)
 
 # --------------------------------------------------
-# LOAD DATA
+# LOAD DATA (DO NOT DROP ROWS GLOBALLY)
 # --------------------------------------------------
 DATA_PATH = os.path.join(BASE_DIR, "merged_data.csv")
 
 @st.cache_data
 def load_data():
+    """
+    Load the air quality dataset without removing rows.
+    Data cleaning must be done locally in visualizations,
+    not at the global load stage.
+    """
     df = pd.read_csv(DATA_PATH)
+
+    # Normalize city names (avoid hidden duplicates)
+    if "City" in df.columns:
+        df["City"] = df["City"].astype(str).str.strip()
+
     return df
+
 
 
 # --------------------------------------------------
